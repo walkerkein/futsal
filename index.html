@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>풋살 로테이션 보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #17191A;
+    --ink-soft: #5B6164;
+    --ink-faint: #9AA0A3;
+    --rule: #DCE0E1;
+    --rule-soft: #ECEEEF;
+    --paper: #FFFFFF;
+    --bench: #EFF1F2;
+    --keeper: #F2C300;
+    --keeper-ink: #4A3A00;
+    --keeper-soft: #FDF3CC;
+    --turf: #1E5C3A;
+    --turf-deep: #164A2E;
+    --court: #1B4D89;
+    --court-soft: #E8EFF7;
+    --good: #1E6F4F;
+    --bad: #B23A2F;
+    --num: "Barlow Condensed", "Malgun Gothic", sans-serif;
+    --body: "Barlow", -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--body); color: var(--ink); background: var(--paper);
+    margin: 0; padding: 0 20px 80px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  /* 중계 화면식 헤더 — 코트 라인을 배경으로 */
+  header {
+    position: relative; overflow: hidden; color: #fff;
+    background: var(--turf);
+    background-image: repeating-linear-gradient(
+      90deg, rgba(255,255,255,.045) 0 46px, rgba(0,0,0,.035) 46px 92px);
+    margin: 20px -20px 0; padding: 34px 20px 26px; border-radius: 12px;
+  }
+  header .court-bg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .22; }
+  header .inner { position: relative; }
+  header .eyebrow { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .06em; color: var(--keeper); margin-bottom: 8px; }
+  header .eyebrow .pill { width: 22px; height: 3px; background: var(--keeper); border-radius: 2px; }
+  h1 { font-family: var(--num); font-size: 44px; font-weight: 600; letter-spacing: -0.01em; margin: 0; line-height: .98; }
+  header p { margin: 8px 0 0; color: #D3E3D8; font-size: 15px; max-width: 46ch; }
+
+  .priority { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 0; padding: 0; list-style: none; font-size: 12.5px; }
+  .priority li {
+    display: flex; align-items: center; gap: 6px; color: #E3EEE6;
+    background: rgba(0,0,0,.16); border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px; padding: 4px 11px 4px 5px;
+  }
+  .priority b {
+    font-family: var(--num); font-size: 13px; font-weight: 600; color: var(--ink);
+    background: var(--keeper); border-radius: 50%; width: 18px; height: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  section { padding: 26px 0; border-bottom: 1px solid var(--rule-soft); }
+
+  /* 하프라인 구분선 */
+  .halfway { display: flex; align-items: center; gap: 0; margin: 0; }
+  .halfway .ln { flex: 1; height: 1px; background: var(--rule); }
+  .halfway .circle { width: 26px; height: 26px; border: 1px solid var(--rule); border-radius: 50%; }
+  h2 { font-family: var(--num); font-size: 22px; font-weight: 600; margin: 0 0 14px; }
+
+  .field-row { display: flex; align-items: center; gap: 10px; font-size: 15px; flex-wrap: wrap; }
+  input[type=number] {
+    font-family: var(--num); font-size: 24px; font-weight: 600; width: 74px;
+    padding: 4px 10px; border: 1px solid var(--rule); border-radius: 6px; color: var(--ink);
+    background: var(--paper);
+  }
+  input[type=number]:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+  .presets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .preset {
+    font-family: var(--body); font-size: 13px; padding: 5px 11px; cursor: pointer;
+    background: var(--paper); border: 1px solid var(--rule); border-radius: 999px; color: var(--ink-soft);
+  }
+  .preset:hover { border-color: var(--ink); color: var(--ink); }
+
+  .games { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 8px; margin-top: 14px; }
+  .game-set { display: flex; align-items: center; gap: 8px; }
+  .game-set .gno { font-family: var(--num); font-size: 17px; font-weight: 600; width: 22px; color: var(--ink-faint); text-align: right; }
+  .seg { display: flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; flex: 1; }
+  .seg button {
+    flex: 1; font-family: var(--num); font-size: 15px; font-weight: 500; padding: 5px 0;
+    background: var(--paper); border: 0; border-right: 1px solid var(--rule-soft); cursor: pointer; color: var(--ink-faint);
+  }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+
+  .go { display: flex; gap: 10px; margin: 24px 0 0; }
+  .go button {
+    font-family: var(--body); font-size: 15px; font-weight: 500; padding: 12px 26px;
+    border-radius: 8px; cursor: pointer; border: 1px solid var(--ink);
+  }
+  .go .primary { background: var(--ink); color: #fff; }
+  .go .secondary { background: var(--paper); color: var(--ink); }
+
+  /* 등번호 유니폼 */
+  .jersey { display: inline-block; width: 44px; height: 44px; }
+  .jersey svg { display: block; width: 100%; height: 100%; }
+  .jersey path { stroke-width: 1.5; stroke-linejoin: round; }
+  .jersey text { font-family: var(--num); font-size: 17px; font-weight: 600; }
+  .jersey.on path { fill: var(--paper); stroke: var(--ink); }
+  .jersey.on text { fill: var(--ink); }
+  .jersey.keeper path { fill: var(--keeper); stroke: var(--keeper-ink); }
+  .jersey.keeper text { fill: var(--keeper-ink); }
+  .jersey.off path { fill: var(--bench); stroke: var(--rule); stroke-dasharray: 3.5 2.5; }
+  .jersey.off text { fill: var(--ink-faint); }
+  .discs { display: flex; flex-wrap: wrap; gap: 2px; }
+
+  /* 경기 카드 */
+  .card { display: flex; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--rule-soft); }
+  .card:last-child { border-bottom: 0; }
+  .card .head { flex: 0 0 62px; }
+  .card .board {
+    background: var(--turf-deep); color: #fff; border-radius: 8px; padding: 7px 0 5px;
+    text-align: center; border-bottom: 3px solid var(--keeper);
+  }
+  .card .gnum { font-family: var(--num); font-size: 28px; font-weight: 600; line-height: 1; }
+  .card .glabel { font-size: 10.5px; color: #A8C4B2; letter-spacing: .06em; }
+  .card .court {
+    font-family: var(--num); font-size: 14px; font-weight: 600; color: var(--court);
+    background: var(--court-soft); border-radius: 5px; text-align: center;
+    margin-top: 5px; padding: 2px 0;
+  }
+  .zones { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .zone { display: flex; gap: 12px; align-items: flex-start; }
+  .zone .zlabel {
+    flex: 0 0 74px; font-size: 13px; color: var(--ink-soft); padding-top: 12px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .zone .zlabel svg { width: 14px; height: 14px; flex: 0 0 14px; }
+  .zone.keep .zlabel { color: var(--keeper-ink); }
+
+  /* 누적 */
+  .tally { display: flex; flex-direction: column; gap: 2px; }
+  .tally-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--rule-soft); }
+  .tally-row:last-child { border-bottom: 0; }
+  .bars { display: flex; gap: 16px; font-size: 14px; color: var(--ink-soft); flex-wrap: wrap; }
+  .bars b { font-family: var(--num); font-size: 18px; font-weight: 600; color: var(--ink); margin-left: 4px; }
+  .bars .k b { color: var(--keeper-ink); }
+
+  /* 결과 */
+  .checks { display: flex; flex-direction: column; gap: 8px; }
+  .check { display: flex; gap: 10px; align-items: baseline; font-size: 14px; }
+  .check .mark { font-family: var(--num); font-size: 16px; font-weight: 600; flex: 0 0 auto; }
+  .check.pass .mark { color: var(--good); }
+  .check.fail .mark { color: var(--bad); }
+  .check .rank { font-family: var(--num); font-size: 15px; font-weight: 600; flex: 0 0 46px; color: var(--ink-faint); }
+  .check .txt { color: var(--ink-soft); }
+  .check.fail .txt { color: var(--bad); }
+  .foot { font-size: 13px; color: var(--ink-faint); margin: 16px 0 0; }
+
+  #result { display: none; }
+
+  details.fold { border-top: 1px solid var(--rule-soft); padding: 0; }
+  details.fold summary {
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 18px 0; list-style: none; font-family: var(--num);
+    font-size: 22px; font-weight: 600; color: var(--ink);
+  }
+  details.fold summary::-webkit-details-marker { display: none; }
+  details.fold summary .chev {
+    font-family: var(--body); font-size: 13px; color: var(--ink-faint);
+    transition: transform .18s ease; display: inline-block;
+  }
+  details.fold[open] summary .chev { transform: rotate(180deg); }
+  details.fold summary .hint {
+    font-family: var(--body); font-size: 13px; font-weight: 400;
+    color: var(--ink-faint); margin-left: auto; text-align: right;
+  }
+  details.fold summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .fold-body { padding: 0 0 22px; }
+  .fold-lead { font-size: 14px; color: var(--ink-soft); margin: 0 0 14px; max-width: 62ch; }
+
+  @media (max-width: 560px) {
+    h1 { font-size: 32px; }
+    .card { gap: 12px; }
+    .card .head { flex: 0 0 44px; }
+    .card .gnum { font-size: 27px; }
+    .zone { flex-direction: column; gap: 4px; }
+    .zone .zlabel { padding-top: 0; }
+    .jersey { width: 40px; height: 40px; }
+  }
+  @media print {
+    .go, .presets, section.setup { display: none; }
+    body { padding: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <svg class="court-bg" viewBox="0 0 400 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="none" stroke="#fff" stroke-width="1.4">
+      <rect x="10" y="10" width="380" height="160" rx="2"/>
+      <line x1="200" y1="10" x2="200" y2="170"/>
+      <circle cx="200" cy="90" r="34"/>
+      <circle cx="200" cy="90" r="2.5" fill="#fff"/>
+      <path d="M10 56 h34 a46 46 0 0 1 0 68 h-34"/>
+      <path d="M390 56 h-34 a46 46 0 0 0 0 68 h34"/>
+    </g>
+  </svg>
+  <div class="inner">
+    <h1>풋살 로테이션 보드</h1>
+    <p>등번호 순서대로, 아래 우선순위에 맞춰 경기별 배치를 계산합니다.</p>
+    <ul class="priority">
+      <li><b>1</b> 연속 휴식·연속 골키퍼 금지</li>
+      <li><b>2</b> 횟수 균등</li>
+      <li><b>3</b> 골키퍼·휴식 인접 회피</li>
+      <li><b>4</b> 등번호 묶음</li>
+    </ul>
+  </div>
+</header>
+
+<section class="setup">
+  <h2>참가 인원</h2>
+  <div class="field-row">
+    <input type="number" id="numPlayers" value="8" min="2" max="30">
+    <span>명이 뜁니다</span>
+  </div>
+</section>
+
+<section class="setup">
+  <h2>경기 구성</h2>
+  <div class="field-row">
+    <input type="number" id="numGames" value="9" min="1" max="20">
+    <span>경기</span>
+    <button class="preset" onclick="renderGames()">경기 수 적용</button>
+  </div>
+  <div class="presets">
+    <button class="preset" onclick="setAll(6)">전부 6:6</button>
+    <button class="preset" onclick="setAll(5)">전부 5:5</button>
+  </div>
+  <div class="games" id="gameList"></div>
+</section>
+
+<div class="halfway"><span class="ln"></span><span class="circle"></span><span class="ln"></span></div>
+
+<div class="go">
+  <button class="primary" onclick="run()">배치 계산</button>
+  <button class="secondary" onclick="run()">다시 계산</button>
+</div>
+
+<div id="result">
+  <section>
+    <h2>경기별 배치</h2>
+    <div id="schedule"></div>
+  </section>
+  <details class="fold">
+    <summary>번호별 누적 <span class="chev">▾</span><span class="hint" id="summaryHint"></span></summary>
+    <div class="fold-body">
+      <p class="fold-lead">각 번호가 9경기 동안 몇 번 뛰고, 몇 번 골키퍼를 맡고, 몇 번 쉬는지 보여줍니다. 출전 횟수는 전체 경기에서 휴식을 뺀 값이고, 골키퍼도 출전에 포함됩니다.</p>
+      <div class="tally" id="summary"></div>
+    </div>
+  </details>
+  <details class="fold" style="border-bottom:0">
+    <summary>우선순위 충족 <span class="chev">▾</span><span class="hint" id="qualityHint"></span></summary>
+    <div class="fold-body">
+      <p class="fold-lead">배치를 계산할 때 적용한 네 가지 조건이 실제로 지켜졌는지 확인합니다. 위 조건이 아래 조건보다 항상 우선하며, 상위 조건을 지키기 위해 하위 조건은 일부 포기할 수 있습니다.</p>
+      <div class="checks" id="quality"></div>
+    </div>
+  </details>
+</div>
+
+</div>
+<script>
+function playerLabel(i) { return (i + 1); }
+
+function renderGames() {
+  const n = parseInt(document.getElementById('numGames').value) || 9;
+  const list = document.getElementById('gameList');
+  const prev = [...list.querySelectorAll('.seg')].map(s => s.dataset.value);
+  list.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const def = prev[i] || '6';
+    const div = document.createElement('div');
+    div.className = 'game-set';
+    div.innerHTML = '<span class="gno">' + (i + 1) + '</span>' +
+      '<div class="seg" data-value="' + def + '">' +
+      [6, 5].map(v =>
+        '<button type="button" aria-pressed="' + (def == v ? 'true' : 'false') +
+        '" onclick="pick(this,' + v + ')">' + v + ':' + v + '</button>').join('') +
+      '</div>';
+    list.appendChild(div);
+  }
+}
+
+function pick(btn, v) {
+  const seg = btn.parentElement;
+  seg.dataset.value = String(v);
+  [...seg.children].forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+}
+
+function setAll(v) {
+  document.querySelectorAll('#gameList .seg').forEach(seg => {
+    seg.dataset.value = String(v);
+    [...seg.children].forEach(b => b.setAttribute('aria-pressed', b.textContent === v + ':' + v ? 'true' : 'false'));
+  });
+}
+
+function adjacencyPairs(group, n) {
+  const s = new Set(group);
+  let pairs = 0;
+  group.forEach(i => { if (s.has((i + 1) % n)) pairs++; });
+  return group.length === n ? pairs - 1 : pairs;
+}
+
+function buildOnce(n, types, jitter) {
+  const rest = new Array(n).fill(0);
+  const gk = new Array(n).fill(0);
+  let prevRest = new Set(), prevGk = new Set();
+  const games = [];
+
+  for (const playCount of types) {
+    const restCount = Math.max(0, n - playCount);
+    const gkCount = Math.min(2, playCount);
+
+    const resting = [];
+    for (let k = 0; k < restCount; k++) {
+      let bestI = -1, bestS = Infinity;
+      for (let i = 0; i < n; i++) {
+        if (resting.includes(i)) continue;
+        if (prevRest.has(i) && n - prevRest.size >= restCount) continue;
+        const adj = resting.some(r => (r + 1) % n === i || (i + 1) % n === r) ? 1 : 0;
+        const s = rest[i] * 10000 + (prevGk.has(i) ? 400 : 0) - adj * 60 + Math.random() * jitter;
+        if (s < bestS) { bestS = s; bestI = i; }
+      }
+      if (bestI >= 0) resting.push(bestI);
+    }
+
+    const playing = [];
+    for (let i = 0; i < n; i++) if (!resting.includes(i)) playing.push(i);
+
+    const gks = [];
+    const gkEligible = playing.filter(i => !prevGk.has(i));
+    const gkPool = gkEligible.length >= gkCount ? gkEligible : playing;
+    for (let k = 0; k < gkCount; k++) {
+      let bestI = -1, bestS = Infinity;
+      for (const i of gkPool) {
+        if (gks.includes(i)) continue;
+        const adj = gks.some(g => (g + 1) % n === i || (i + 1) % n === g) ? 1 : 0;
+        const s = gk[i] * 10000 + (prevRest.has(i) ? 400 : 0) - adj * 60 + Math.random() * jitter;
+        if (s < bestS) { bestS = s; bestI = i; }
+      }
+      if (bestI >= 0) gks.push(bestI);
+    }
+
+    resting.forEach(i => rest[i]++);
+    gks.forEach(i => gk[i]++);
+    games.push({ playCount, resting, playing, gks });
+    prevRest = new Set(resting);
+    prevGk = new Set(gks);
+  }
+  return { games, rest, gk };
+}
+
+function evaluate(res, n) {
+  const { games, rest, gk } = res;
+  const dev = arr => {
+    const m = arr.reduce((s, v) => s + v, 0) / arr.length;
+    return arr.reduce((s, v) => s + (v - m) * (v - m), 0);
+  };
+  let backToBack = 0, backToBackGk = 0, adjacentDuty = 0, clusters = 0;
+  for (let g = 0; g < games.length; g++) {
+    clusters += adjacencyPairs(games[g].resting, n) + adjacencyPairs(games[g].gks, n);
+    if (g === 0) continue;
+    const pR = new Set(games[g - 1].resting);
+    const pG = new Set(games[g - 1].gks);
+    games[g].resting.forEach(i => { if (pR.has(i)) backToBack++; });
+    games[g].gks.forEach(i => { if (pG.has(i)) backToBackGk++; });
+    games[g].gks.forEach(i => { if (pR.has(i)) adjacentDuty++; });
+    games[g].resting.forEach(i => { if (pG.has(i)) adjacentDuty++; });
+  }
+  const imbalance = dev(rest) + dev(gk);
+  const score = (backToBack + backToBackGk) * 1e7 + imbalance * 1e4 + adjacentDuty * 1e2 - clusters;
+  return { score, backToBack, backToBackGk, adjacentDuty, clusters, imbalance };
+}
+
+function run() {
+  const n = parseInt(document.getElementById('numPlayers').value);
+  const types = [...document.querySelectorAll('#gameList .seg')].map(s => parseInt(s.dataset.value));
+
+  if (!n || n < 2) { alert('참가 인원을 2명 이상 입력해 주세요.'); return; }
+  if (types.length === 0) { alert('경기 수를 먼저 적용해 주세요.'); return; }
+  const tooBig = types.find(t => t > n);
+  if (tooBig) { alert('참가 인원 ' + n + '명보다 큰 구장(' + tooBig + ':' + tooBig + ')이 있습니다.'); return; }
+
+  let best = null, bestEval = null;
+  const jitters = [0, 20, 60, 150, 400];
+  for (let round = 0; round < jitters.length; round++) {
+    const iters = round === 0 ? 1 : 3000;
+    for (let i = 0; i < iters; i++) {
+      const cand = buildOnce(n, types, jitters[round]);
+      const ev = evaluate(cand, n);
+      if (!bestEval || ev.score < bestEval.score) { best = cand; bestEval = ev; }
+    }
+  }
+  render(best, bestEval, n);
+}
+
+var ICON = {
+  ball: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="9"/><path d="M12 7.2l3.6 2.6-1.4 4.2h-4.4L8.4 9.8z"/>' +
+        '<path d="M12 3v4.2M19.6 9.8l-4 0M17.3 18.6l-3.1-4.6M6.7 18.6l3.1-4.6M4.4 9.8l4 0"/></svg>',
+  glove: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
+         '<path d="M8 21v-4.4L5.6 14a2 2 0 0 1 2.8-2.8l.6.6V5.5a1.5 1.5 0 0 1 3 0V10m0 0V4.5a1.5 1.5 0 0 1 3 0V10m0 0V6.5a1.5 1.5 0 0 1 3 0V16a5 5 0 0 1-1.5 3.6L18 21"/></svg>',
+  bench: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
+         '<path d="M3 11h18M4 11v8M20 11v8M3 15h18"/></svg>'
+};
+
+var JERSEY_PATH = 'M13 4 L18 4 C19 7.5 21 7.5 22 4 L27 4 L38 10 L34 19.5 L30 17.5 L30 37 L10 37 L10 17.5 L6 19.5 L2 10 Z';
+
+function jersey(i, cls) {
+  return '<span class="jersey ' + cls + '">' +
+    '<svg viewBox="0 0 40 40" role="img" aria-label="' + playerLabel(i) + '번">' +
+    '<path d="' + JERSEY_PATH + '"/>' +
+    '<text x="20" y="28" text-anchor="middle">' + playerLabel(i) + '</text>' +
+    '</svg></span>';
+}
+
+function discs(arr, cls) {
+  return '<div class="discs">' +
+    arr.slice().sort((a, b) => a - b).map(i => jersey(i, cls)).join('') +
+    '</div>';
+}
+
+function render(res, ev, n) {
+  const { games, rest, gk } = res;
+
+  let h = '';
+  games.forEach((g, i) => {
+    const field = g.playing.filter(p => !g.gks.includes(p));
+    h += '<div class="card">' +
+      '<div class="head">' +
+        '<div class="board"><div class="gnum">' + (i + 1) + '</div><div class="glabel">GAME</div></div>' +
+        '<div class="court">' + g.playCount + ':' + g.playCount + '</div>' +
+      '</div>' +
+      '<div class="zones">' +
+        '<div class="zone"><span class="zlabel">' + ICON.ball + '필드</span>' + discs(field, 'on') + '</div>' +
+        '<div class="zone keep"><span class="zlabel">' + ICON.glove + '골키퍼</span>' + discs(g.gks, 'keeper') + '</div>' +
+        (g.resting.length ? '<div class="zone"><span class="zlabel">' + ICON.bench + '휴식</span>' + discs(g.resting, 'off') + '</div>' : '') +
+      '</div></div>';
+  });
+  document.getElementById('schedule').innerHTML = h;
+
+  let s = '';
+  for (let i = 0; i < n; i++) {
+    s += '<div class="tally-row">' +
+      jersey(i, 'on') +
+      '<div class="bars">' +
+        '<span>출전<b>' + (games.length - rest[i]) + '</b></span>' +
+        '<span class="k">골키퍼<b>' + gk[i] + '</b></span>' +
+        '<span>휴식<b>' + rest[i] + '</b></span>' +
+      '</div></div>';
+  }
+  document.getElementById('summary').innerHTML = s;
+  document.getElementById('summaryHint').textContent =
+    '골키퍼 ' + Math.min(...gk) + '~' + Math.max(...gk) + '회 · 휴식 ' + Math.min(...rest) + '~' + Math.max(...rest) + '회';
+
+  const restSpread = Math.max(...rest) - Math.min(...rest);
+  const gkSpread = Math.max(...gk) - Math.min(...gk);
+  const row = (ok, rank, txt) =>
+    '<div class="check ' + (ok ? 'pass' : 'fail') + '"><span class="mark">' + (ok ? '✓' : '✕') + '</span>' +
+    '<span class="rank">' + rank + '순위</span><span class="txt">' + txt + '</span></div>';
+
+  const p1 = ev.backToBack === 0 && ev.backToBackGk === 0;
+  document.getElementById('quality').innerHTML =
+    row(p1, 1, p1 ? '연달아 쉬거나 연달아 골키퍼를 맡는 사람 없음'
+                 : '연속 휴식 ' + ev.backToBack + '건, 연속 골키퍼 ' + ev.backToBackGk + '건') +
+    row(restSpread <= 1 && gkSpread <= 1, 2, '휴식 편차 ' + restSpread + '회, 골키퍼 편차 ' + gkSpread + '회') +
+    row(ev.adjacentDuty === 0, 3, ev.adjacentDuty === 0 ? '골키퍼와 휴식이 앞뒤로 붙은 경우 없음' : '인접 ' + ev.adjacentDuty + '건') +
+    '<div class="check pass"><span class="mark">·</span><span class="rank">4순위</span><span class="txt">등번호가 붙어서 배치된 묶음 ' + ev.clusters + '쌍</span></div>' +
+    '<p class="foot">1순위는 후보에서 아예 제외하는 방식이라 인원이 모자라지 않는 한 반드시 지켜집니다. ' +
+    '2순위 편차 1회는 총 배정 횟수가 인원수로 나누어떨어지지 않을 때 생기는 최소값입니다. ' +
+    '예를 들어 8명이 9경기를 뛰면 골키퍼 자리가 18개라 2회인 사람과 3회인 사람이 섞일 수밖에 없습니다. ' +
+    '3순위는 쉰 직후 골키퍼를 맡거나 골키퍼 직후 쉬는 경우를 뜻하고, 4순위는 5·6번처럼 붙은 번호끼리 같이 배정된 묶음 수입니다. ' +
+    '다시 계산을 눌러 다른 조합과 비교해 보세요.</p>';
+  const p1ok = ev.backToBack === 0 && ev.backToBackGk === 0;
+  const p2ok = restSpread <= 1 && gkSpread <= 1;
+  const p3ok = ev.adjacentDuty === 0;
+  const passed = [p1ok, p2ok, p3ok].filter(Boolean).length;
+  document.getElementById('qualityHint').textContent = '3개 중 ' + passed + '개 충족';
+
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+renderGames();
+</script>
+</body>
+</html>
