@@ -23,7 +23,7 @@ src = src.replace('<meta name="viewport" content="width=device-width, initial-sc
                   '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">', 1)
 old_font = 'family=Barlow+Condensed:wght@500;600&family=Barlow:wght@400;500;600&display=swap'
 assert old_font in src
-src = src.replace(old_font, 'family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=Noto+Sans+KR:wght@700;900&display=swap')
+src = src.replace(old_font, 'family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=Noto+Sans+KR:wght@400;500;700;900&display=swap')
 src = src.replace('</style>', css + rcss + '</style>', 1)
 src = src.replace('<body>\n<div class="wrap">', '<body class="app">\n' + html + '\n<div id="view-rotation" role="tabpanel" aria-labelledby="tabRotation" hidden>\n<div class="wrap">\n' + rhtml, 1)
 i = src.index('</div>\n<script>')

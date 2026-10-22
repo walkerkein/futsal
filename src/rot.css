@@ -125,11 +125,11 @@
   .kt-name { font-size: 13px; font-weight: 500; color: #3B4A57; }
   .kt-line { display: flex; align-items: flex-end; gap: 6px; }
   .kt-time { flex: 0 0 auto; font-size: 11px; color: #56636E; white-space: nowrap; padding-bottom: 2px; }
-  .bub { position: relative; max-width: none; font-size: 18px; font-weight: 500; line-height: 1.5; letter-spacing: -0.02em; border-radius: 16px; padding: 10px 14px; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
+  .bub { position: relative; max-width: none; font-size: 16px; font-weight: 400; line-height: 1.5; letter-spacing: -0.02em; border-radius: 16px; padding: 10px 14px; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
   .bub.bot { background: #fff; color: #111; border-top-left-radius: 4px; border-bottom-left-radius: 16px; }
   .bub.bot .soft { color: #6B7680; font-size: 15px; }
   .bub.bot b { color: #111; background: var(--kt-yellow); padding: 0 3px; border-radius: 4px; }
-  .bub.me { background: var(--kt-yellow); color: #111; font-weight: 700; border-top-right-radius: 4px; border-bottom-right-radius: 16px; max-width: 78%; }
+  .bub.me { background: var(--kt-yellow); color: #111; font-weight: 400; border-top-right-radius: 4px; border-bottom-right-radius: 16px; max-width: 78%; }
   .bub.me .edit { color: #6B5A00; opacity: .8; }
   .bub.me:focus-visible { outline: 3px solid #111; }
   .typing i { background: #9AA5AE; }
@@ -159,14 +159,14 @@
   .rc-con b { color: #111; background: var(--kt-yellow); padding: 0 4px; border-radius: 4px; }
   #view-rotation .wrap { max-width: none; }
   #view-rotation #result { max-width: 860px; margin: 0 auto; padding-top: 6px; }
-  @media (max-width: 380px) { .rc-panel { padding-left: 0; } .bub { font-size: 17px; } }
+  @media (max-width: 380px) { .rc-panel { padding-left: 0; } .bub { font-size: 15.5px; } }
   .rc { padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
   .kt-av { width: 38px; height: 38px; border-radius: 14px; }
   .kt-av svg { width: 24px; height: 24px; }
   .kt-col { max-width: calc(100% - 46px); }
-  .bub { font-size: 17px; }
+  .bub { font-size: 16px; }   /* 대화 글자: 보통 굵기, 살짝 작게 */
   .rc-panel { padding-left: 46px; }
-  @media (max-width: 380px) { .rc-panel { padding-left: 0; } .bub { font-size: 16px; } }
+  @media (max-width: 380px) { .rc-panel { padding-left: 0; } .bub { font-size: 15px; } }
   .bub { padding: 10px 12px; letter-spacing: -0.035em; }
   .kt-line { gap: 4px; } .kt-time { font-size: 10.5px; }
   /* ===== 결과: 한 경기 한 줄 ===== */
