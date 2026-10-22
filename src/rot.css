@@ -295,3 +295,6 @@
   .rc-panel:has(.dot) .rc-chip { flex: 0 0 calc(25% - 4.5px); min-height: 50px; padding: 6px 2px; font-size: 15px; border-radius: 12px; }
   .rc-panel:has(.dot) .rc-chip:has(.dot) { flex-direction: column; gap: 4px; }
   .rc-panel:has(.dot) .rc-chip .dot { width: 16px; height: 16px; }
+  /* 결과 범례: 빈 색 칸 + 이름 */
+  .gl-note { gap: 6px 14px; }
+  .gl-note .lg { display: inline-flex; align-items: center; gap: 6px; }

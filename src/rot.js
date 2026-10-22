@@ -334,8 +334,10 @@
         '<div class="fd">' + pills(field, 'f') + '</div>' +
         '</div>';
     });
-    h += '</div><p class="gl-note"><span class="pl r">7</span> 휴식 <span class="pl k">3</span> 키퍼 <span class="pl f">1</span> 필드' +
-      (games.some(g => (g.excluded || []).length) ? ' <span class="pl x">5</span> 열외(지각·부상)' : '') + '</p>';
+    // 범례: 번호 없이 색 모양만(빈 회색 = 휴식, 빈 노랑 = 키퍼, 회색 테두리 = 필드, 빨간 테두리 = 열외)
+    const lg = (c, t) => '<span class="lg"><span class="pl ' + c + '"></span>' + t + '</span>';
+    h += '</div><p class="gl-note">' + lg('r', '휴식') + lg('k', '키퍼') + lg('f', '필드') +
+      (games.some(g => (g.excluded || []).length) ? lg('x', '열외(지각·부상)') : '') + '</p>';
     document.getElementById('schedule').innerHTML = h;
     fit();
     buildMid(res, n);
