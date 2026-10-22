@@ -1,0 +1,74 @@
+<nav class="appbar">
+  <div class="bar">
+    <img class="logo" src="icon-192.png" alt="G풋살" width="34" height="34">
+    <div class="tabs" role="tablist" aria-label="화면 선택">
+      <button class="tab" role="tab" id="tabTimer" data-view="timer" aria-selected="true" aria-controls="view-timer">경기 타이머</button>
+      <button class="tab" role="tab" id="tabRotation" data-view="rotation" aria-selected="false" aria-controls="view-rotation">로테이션 구성</button>
+    </div>
+  </div>
+</nav>
+
+<main class="tm" id="view-timer" role="tabpanel" aria-labelledby="tabTimer" data-phase="idle">
+  <div class="tm-head" id="tmHead" hidden>
+    <button class="tm-x" id="tmStop" aria-label="정지하고 처음으로" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+    <button class="tm-pip" id="tmPip" aria-label="작은 화면으로 띄우기" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><rect x="11.5" y="11.5" width="8" height="6" rx="1.2" fill="currentColor"/></svg>
+      <span>작은 화면</span>
+    </button>
+  </div>
+
+  <div class="tm-main" id="tmMain">
+    <div class="tm-setup" id="tmSetup">
+      <div class="tm-setup-label">전·후반 경기시간</div>
+      <div class="tm-wheels">
+        <div class="tm-band" aria-hidden="true"></div>
+        <div class="tm-wheel" id="tmWheelM" tabindex="0" role="spinbutton" aria-label="분" aria-valuemin="0" aria-valuemax="10"></div>
+        <div class="tm-colon" aria-hidden="true">:</div>
+        <div class="tm-wheel" id="tmWheelS" tabindex="0" role="spinbutton" aria-label="초" aria-valuemin="0" aria-valuemax="50"></div>
+      </div>
+    </div>
+    <div class="tm-run" id="tmRun" hidden aria-live="polite">
+      <div class="tm-label" id="tmLabel">준비</div>
+      <span class="tm-chip" id="tmChip"></span>
+      <div class="tm-sub" id="tmSub"></div>
+      <div class="tm-time" id="tmTime">00:00</div>
+      <div class="tm-mini" id="tmMini"></div>
+    </div>
+  </div>
+
+  <div class="tm-foot">
+    <div class="tm-stat" id="tmStatL" hidden><span id="tmHalfK">전반 남은 시간</span><b id="tmHalf">05:00</b></div>
+    <button class="tm-play" id="tmPlay" aria-label="시작">
+      <svg id="tmIcoPlay" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3.5v17l15-8.5z"/></svg>
+      <svg id="tmIcoPause" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M5 3h5v18H5zM14 3h5v18h-5z"/></svg>
+      <span class="tm-restart" id="tmEndBtn" hidden><svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14"/></svg>경기 종료</span>
+      <span class="tm-restart" id="tmRestart" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>다시 시작</span>
+    </button>
+    <div class="tm-stat" id="tmStatR" hidden><span>전체 남은 시간</span><b id="tmTotal">10:00</b></div>
+    <button class="tm-gear" id="tmGear" aria-label="설정" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1.03z"/></svg>
+      <span>설정</span>
+    </button>
+  </div>
+</main>
+<div class="tm-sheet" id="tmSheet" hidden>
+  <div class="tm-sheet-bg" data-close></div>
+  <div class="tm-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="tmSheetTitle">
+    <div class="tm-sheet-title" id="tmSheetTitle">설정</div>
+    <div class="tm-set-row">
+      <div class="tm-set-k"><b>3·2·1 카운트다운 알림</b></div>
+      <button class="tm-switch" id="tmCd" role="switch" aria-checked="true" aria-label="3·2·1 카운트다운 알림"><i></i></button>
+    </div>
+    <div class="tm-set-row">
+      <div class="tm-set-k"><b>시작·종료 알림음</b></div>
+      <div class="tm-seg" role="radiogroup" aria-label="시작·종료 알림음">
+        <button role="radio" data-sv="whistle" aria-checked="true">휘슬</button>
+        <button role="radio" data-sv="buzzer" aria-checked="false">부저음</button>
+      </div>
+    </div>
+    <button class="tm-done" data-close>완료</button>
+  </div>
+</div>
+<div class="tm-toast" id="tmToast" role="status" hidden></div>

@@ -1,5 +1,5 @@
 // 오프라인 실행용 캐시. 파일을 고치면 VERSION 숫자를 올리면 됩니다.
-const VERSION = 'futsal-v2';
+const VERSION = 'futsal-v3';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -14,7 +14,8 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   // 페이지는 최신본 우선, 안 되면(경기장 신호 약함) 저장본
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).then(r => { const c = r.clone(); caches.open(VERSION).then(x => x.put('./index.html', c)); return r; })
+    // GitHub Pages는 10분간 저장본을 쓰라고 알려 주므로, 매번 서버에 바뀌었는지 확인(no-cache)해 수정이 바로 보이게 함
+    e.respondWith(fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }).then(r => { const c = r.clone(); caches.open(VERSION).then(x => x.put('./index.html', c)); return r; })
       .catch(() => caches.match('./index.html')));
     return;
   }
