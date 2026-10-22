@@ -7,8 +7,8 @@
   const thread = $('rcThread');
   const SAVE_KEY = 'futsalRotation.last';
   const VESTS = [
-    { k: '빨강', c: '#FF2D2D' }, { k: '파랑', c: '#1F5BFF' }, { k: '노랑', c: '#FEFF65' },
-    { k: '검정', c: '#111111' }, { k: '핑크', c: '#FF5FB4' }, { k: '그린', c: '#2BD45B' }
+    { k: '레드', c: '#FF2D2D' }, { k: '블루', c: '#1F5BFF' }, { k: '옐로우', c: '#FEFF65' }, { k: '블랙', c: '#111111' },
+    { k: '핑크', c: '#FF5FB4' }, { k: '그린', c: '#2BD45B' }, { k: '화이트', c: '#FFFFFF' }
   ];
   const STEPS = ['start', 'vest', 'n', 'games', 'per', 'special', 'done'];
 
@@ -420,7 +420,7 @@
 })();
 
 /* ===== 텍스트로 복사: 단톡방용 간단한 형식 =====
-   파랑팀 풋살 로테이션 (총 9경기)
+   블루팀 풋살 로테이션 (총 9경기)
    1경기 휴식 1,2 | GK 3,4
    (번호별 누적은 넣지 않음. 열외자는 휴식에 포함, 휴식이 없으면 GK만, 경기 인원이 섞여 있으면 '(5:5)' 표시) */
 (function () {

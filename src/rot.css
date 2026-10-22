@@ -290,3 +290,8 @@
   #view-rotation #midSection summary:focus-visible { outline: 2px solid #FF7A6B; outline-offset: 2px; }
   #view-rotation #midSection .fold-body { background: var(--kt-bg); border-radius: 16px; margin-bottom: 18px; }
   #view-rotation #midSection { border-top: 0; margin-top: 0; }
+  /* 조끼 색 7개: 한 줄에 4개, 조금 작게(색 점 위 + 이름 아래) */
+  .rc-panel:has(.dot) { justify-content: center; gap: 6px; }
+  .rc-panel:has(.dot) .rc-chip { flex: 0 0 calc(25% - 4.5px); min-height: 50px; padding: 6px 2px; font-size: 15px; border-radius: 12px; }
+  .rc-panel:has(.dot) .rc-chip:has(.dot) { flex-direction: column; gap: 4px; }
+  .rc-panel:has(.dot) .rc-chip .dot { width: 16px; height: 16px; }
