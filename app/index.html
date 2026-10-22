@@ -1940,7 +1940,7 @@ renderConstraints();
   const nowText = () => { const d = new Date(), h = d.getHours(), m = String(d.getMinutes()).padStart(2, '0'); return (h < 12 ? '오전 ' : '오후 ') + (h % 12 || 12) + ':' + m; };
   function bot(html) {
     const row = document.createElement('div'); row.className = 'kt-row bot';
-    row.innerHTML = AV + '<div class="kt-col"><div class="kt-name">풋살 매니저</div><div class="kt-line"><div class="bub bot"></div><span class="kt-time">' + nowText() + '</span></div></div>';
+    row.innerHTML = AV + '<div class="kt-col"><div class="kt-name">G풋살 매니저</div><div class="kt-line"><div class="bub bot"></div><span class="kt-time">' + nowText() + '</span></div></div>';
     const d = row.querySelector('.bub'); d.innerHTML = html; thread.appendChild(row); return d;
   }
   function me(text, step) {
