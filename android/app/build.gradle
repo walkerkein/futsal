@@ -1,0 +1,38 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'kr.walkerkein.futsal'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'kr.walkerkein.futsal'
+        minSdk 26
+        targetSdk 35
+        versionCode Integer.parseInt(System.getenv('VERSION_CODE') ?: '1')
+        versionName System.getenv('VERSION_NAME') ?: '1.0'
+    }
+
+    signingConfigs {
+        release {
+            // GitHub Actions에서 저장소 비밀값(KEYSTORE)으로 만든 서명 파일을 사용. 항상 같은 서명이어야 업데이트 설치가 됨
+            storeFile file(System.getenv('KEYSTORE_PATH') ?: 'release.keystore')
+            storePassword System.getenv('KEYSTORE_PASSWORD') ?: ''
+            keyAlias System.getenv('KEY_ALIAS') ?: 'futsal'
+            keyPassword System.getenv('KEY_PASSWORD') ?: ''
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

@@ -1,0 +1,2353 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>G풋살</title>
+<meta name="theme-color" content="#000000">
+<meta name="description" content="G풋살: 풋살 경기 타이머와 로테이션 구성">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="G풋살">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600&family=Noto+Sans+KR:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #17191A;
+    --ink-soft: #5B6164;
+    --ink-faint: #9AA0A3;
+    --rule: #DCE0E1;
+    --rule-soft: #ECEEEF;
+    --paper: #FFFFFF;
+    --bench: #EFF1F2;
+    --keeper: #F2C300;
+    --keeper-ink: #4A3A00;
+    --keeper-soft: #FDF3CC;
+    --turf: #1E5C3A;
+    --turf-deep: #164A2E;
+    --court: #1B4D89;
+    --court-soft: #E8EFF7;
+    --good: #1E6F4F;
+    --bad: #B23A2F;
+    --num: "Barlow Condensed", "Malgun Gothic", sans-serif;
+    --body: "Barlow", -apple-system, BlinkMacSystemFont, "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: var(--body); color: var(--ink); background: var(--paper);
+    margin: 0; padding: 0 20px 80px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+
+  /* 중계 화면식 헤더 — 코트 라인을 배경으로 */
+  header {
+    position: relative; overflow: hidden; color: #fff;
+    background: var(--turf);
+    background-image: repeating-linear-gradient(
+      90deg, rgba(255,255,255,.045) 0 46px, rgba(0,0,0,.035) 46px 92px);
+    margin: 20px -20px 0; padding: 34px 20px 26px; border-radius: 12px;
+  }
+  header .court-bg { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .22; }
+  header .inner { position: relative; }
+  header .eyebrow { display: flex; align-items: center; gap: 8px; font-size: 12px; letter-spacing: .06em; color: var(--keeper); margin-bottom: 8px; }
+  header .eyebrow .pill { width: 22px; height: 3px; background: var(--keeper); border-radius: 2px; }
+  h1 { font-family: var(--num); font-size: 44px; font-weight: 600; letter-spacing: -0.01em; margin: 0; line-height: .98; }
+  header p { margin: 8px 0 0; color: #D3E3D8; font-size: 15px; max-width: 46ch; }
+
+  .priority { display: flex; flex-wrap: wrap; gap: 6px; margin: 18px 0 0; padding: 0; list-style: none; font-size: 12.5px; }
+  .priority li {
+    display: flex; align-items: center; gap: 6px; color: #E3EEE6;
+    background: rgba(0,0,0,.16); border: 1px solid rgba(255,255,255,.18);
+    border-radius: 999px; padding: 4px 11px 4px 5px;
+  }
+  .priority b {
+    font-family: var(--num); font-size: 13px; font-weight: 600; color: var(--ink);
+    background: var(--keeper); border-radius: 50%; width: 18px; height: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  section { padding: 26px 0; border-bottom: 1px solid var(--rule-soft); }
+
+  /* 하프라인 구분선 */
+  .halfway { display: flex; align-items: center; gap: 0; margin: 0; }
+  .halfway .ln { flex: 1; height: 1px; background: var(--rule); }
+  .halfway .circle { width: 26px; height: 26px; border: 1px solid var(--rule); border-radius: 50%; }
+  h2 { font-family: var(--num); font-size: 22px; font-weight: 600; margin: 0 0 14px; }
+
+  .field-row { display: flex; align-items: center; gap: 10px; font-size: 15px; flex-wrap: wrap; }
+  input[type=number] {
+    font-family: var(--num); font-size: 24px; font-weight: 600; width: 74px;
+    padding: 4px 10px; border: 1px solid var(--rule); border-radius: 6px; color: var(--ink);
+    background: var(--paper);
+  }
+  input[type=number]:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .team-input {
+    font-family: var(--num); font-size: 24px; font-weight: 600; width: 130px;
+    padding: 4px 10px; border: 1px solid var(--rule); border-radius: 6px; color: var(--ink);
+    background: var(--paper);
+  }
+  .team-input:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+
+  .presets { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .preset {
+    font-family: var(--body); font-size: 13px; padding: 5px 11px; cursor: pointer;
+    background: var(--paper); border: 1px solid var(--rule); border-radius: 999px; color: var(--ink-soft);
+  }
+  .preset:hover { border-color: var(--ink); color: var(--ink); }
+
+  .games { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 8px; margin-top: 14px; }
+  .game-set { display: flex; align-items: center; gap: 8px; }
+  .game-set .gno { font-family: var(--num); font-size: 17px; font-weight: 600; width: 22px; color: var(--ink-faint); text-align: right; }
+  .seg { display: flex; border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; flex: 1; }
+  .seg button {
+    flex: 1; font-family: var(--num); font-size: 15px; font-weight: 500; padding: 5px 0;
+    background: var(--paper); border: 0; border-right: 1px solid var(--rule-soft); cursor: pointer; color: var(--ink-faint);
+  }
+  .seg button:last-child { border-right: 0; }
+  .seg button[aria-pressed="true"] { background: var(--ink); color: #fff; }
+
+  .go { display: flex; gap: 10px; margin: 24px 0 0; }
+  .go button {
+    font-family: var(--body); font-size: 15px; font-weight: 500; padding: 12px 26px;
+    border-radius: 8px; cursor: pointer; border: 1px solid var(--ink);
+  }
+  .go .primary { background: var(--ink); color: #fff; }
+  .go .secondary { background: var(--paper); color: var(--ink); }
+
+  /* 등번호 유니폼 */
+  .jersey { display: inline-block; width: 44px; height: 44px; }
+  .jersey svg { display: block; width: 100%; height: 100%; }
+  .jersey path { stroke-width: 1.5; stroke-linejoin: round; }
+  .jersey text { font-family: var(--num); font-size: 17px; font-weight: 600; }
+  .jersey.on path { fill: var(--paper); stroke: var(--ink); }
+  .jersey.on text { fill: var(--ink); }
+  .jersey.keeper path { fill: var(--keeper); stroke: var(--keeper-ink); }
+  .jersey.keeper text { fill: var(--keeper-ink); }
+  .jersey.off path { fill: var(--bench); stroke: var(--rule); stroke-dasharray: 3.5 2.5; }
+  .jersey.off text { fill: var(--ink-faint); }
+  .jersey.excluded path { fill: #FBEAE8; stroke: var(--bad); }
+  .jersey.excluded text { fill: var(--bad); }
+  .discs { display: flex; flex-wrap: wrap; gap: 2px; }
+
+  /* 특수 상황 */
+  select.cs-select {
+    font-family: var(--body); font-size: 14px; padding: 6px 8px;
+    border: 1px solid var(--rule); border-radius: 6px; color: var(--ink); background: var(--paper);
+  }
+  input[type=number].cs-num { width: 66px; font-size: 16px; padding: 5px 8px; }
+  .btn-add {
+    font-family: var(--body); font-size: 14px; font-weight: 600; padding: 8px 20px;
+    border-radius: 8px; cursor: pointer; border: 1px solid var(--ink);
+    background: var(--ink); color: #fff;
+  }
+  .btn-add:hover { opacity: .88; }
+  .btn-lg {
+    font-family: var(--body); font-size: 15px; font-weight: 500; padding: 12px 26px;
+    border-radius: 8px; cursor: pointer; border: 1px solid var(--ink);
+    background: var(--ink); color: #fff; margin-top: 14px;
+  }
+  .btn-lg:hover { opacity: .9; }
+  .btn-copy {
+    display: block; width: 100%; font-family: var(--body); font-size: 16px; font-weight: 600;
+    padding: 14px 24px; border-radius: 9px; cursor: pointer; border: none;
+    background: var(--keeper); color: var(--keeper-ink);
+    box-shadow: 0 2px 0 rgba(0,0,0,.18); margin: 6px 0 8px;
+  }
+  .btn-copy:hover { filter: brightness(.97); }
+  .btn-copy.copied { background: var(--good); color: #fff; box-shadow: 0 2px 0 rgba(0,0,0,.12); }
+  .constraint-list { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+  .constraint-row {
+    display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--ink-soft);
+    background: var(--rule-soft); border-radius: 6px; padding: 7px 10px;
+  }
+  .constraint-row .tag { font-family: var(--num); font-weight: 600; color: var(--ink); flex: 0 0 auto; }
+  .constraint-row .rm { margin-left: auto; font-family: var(--body); font-size: 12px; border: 0; background: none; color: var(--bad); cursor: pointer; padding: 2px 4px; }
+
+  /* 경기 카드 */
+  .card { display: flex; gap: 18px; padding: 16px 0; border-bottom: 1px solid var(--rule-soft); }
+  .card:last-child { border-bottom: 0; }
+  .card .head { flex: 0 0 62px; }
+  .card .board {
+    background: var(--turf-deep); color: #fff; border-radius: 8px; padding: 7px 0 5px;
+    text-align: center; border-bottom: 3px solid var(--keeper);
+  }
+  .card .gnum { font-family: var(--num); font-size: 28px; font-weight: 600; line-height: 1; }
+  .card .glabel { font-size: 10.5px; color: #A8C4B2; letter-spacing: .06em; }
+  .card .court {
+    font-family: var(--num); font-size: 14px; font-weight: 600; color: var(--court);
+    background: var(--court-soft); border-radius: 5px; text-align: center;
+    margin-top: 5px; padding: 2px 0;
+  }
+  .zones { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .zone { display: flex; gap: 12px; align-items: flex-start; }
+  .zone .zlabel {
+    flex: 0 0 74px; font-size: 13px; color: var(--ink-soft); padding-top: 12px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .zone .zlabel svg { width: 14px; height: 14px; flex: 0 0 14px; }
+  .zone.keep .zlabel { color: var(--keeper-ink); }
+  .zlabel .lbltxt { display: inline; }
+
+  /* 누적 */
+  .tally { display: flex; flex-direction: column; gap: 2px; }
+  .tally-row { display: flex; align-items: center; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--rule-soft); }
+  .tally-row:last-child { border-bottom: 0; }
+  .bars { display: flex; gap: 16px; font-size: 14px; color: var(--ink-soft); flex-wrap: wrap; }
+  .bars b { font-family: var(--num); font-size: 18px; font-weight: 600; color: var(--ink); margin-left: 4px; }
+  .bars .k b { color: var(--keeper-ink); }
+
+  /* 결과 */
+  .checks { display: flex; flex-direction: column; gap: 8px; }
+  .check { display: flex; gap: 10px; align-items: baseline; font-size: 14px; }
+  .check .mark { font-family: var(--num); font-size: 16px; font-weight: 600; flex: 0 0 auto; }
+  .check.pass .mark { color: var(--good); }
+  .check.fail .mark { color: var(--bad); }
+  .check .rank { font-family: var(--num); font-size: 15px; font-weight: 600; flex: 0 0 46px; color: var(--ink-faint); }
+  .check .txt { color: var(--ink-soft); }
+  .check.fail .txt { color: var(--bad); }
+  .foot { font-size: 13px; color: var(--ink-faint); margin: 16px 0 0; }
+
+  #result { display: none; }
+
+  details.fold { border-top: 1px solid var(--rule-soft); padding: 0; }
+  details.fold summary {
+    display: flex; align-items: center; gap: 8px; cursor: pointer;
+    padding: 18px 0; list-style: none; font-family: var(--num);
+    font-size: 22px; font-weight: 600; color: var(--ink);
+  }
+  details.fold summary::-webkit-details-marker { display: none; }
+  details.fold summary .chev {
+    font-family: var(--body); font-size: 13px; color: var(--ink-faint);
+    transition: transform .18s ease; display: inline-block;
+  }
+  details.fold[open] summary .chev { transform: rotate(180deg); }
+  details.fold summary .hint {
+    font-family: var(--body); font-size: 13px; font-weight: 400;
+    color: var(--ink-faint); margin-left: auto; text-align: right;
+  }
+  details.fold summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .fold-body { padding: 0 0 22px; }
+  .fold-lead { font-size: 14px; color: var(--ink-soft); margin: 0 0 14px; max-width: 62ch; }
+
+  @media (max-width: 560px) {
+    h1 { font-size: 32px; }
+
+    /* 경기 카드를 한 줄로 압축 */
+    .card { flex-direction: column; gap: 6px; padding: 10px 0; }
+    .card .head {
+      flex: 0 0 auto; display: flex; flex-direction: row; align-items: center; gap: 8px;
+    }
+    .card .board {
+      display: flex; align-items: baseline; gap: 5px; padding: 3px 9px;
+      border-radius: 6px; border-bottom: 2px solid var(--keeper);
+    }
+    .card .gnum { font-size: 17px; }
+    .card .glabel { display: none; }
+    .card .court { margin-top: 0; padding: 2px 8px; display: inline-block; }
+    .zones { gap: 5px; }
+    .zone {
+      flex-direction: row; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .zone .zlabel {
+      flex: 0 0 auto; padding-top: 0; gap: 3px; font-size: 0;
+    }
+    .zlabel .lbltxt { display: none; }
+    .zone .zlabel svg { width: 15px; height: 15px; flex: 0 0 15px; }
+    .jersey { width: 27px; height: 27px; }
+    .discs { gap: 1px; }
+  }
+  @media print {
+    .go, .presets, section.setup { display: none; }
+    body { padding: 0; }
+  }
+
+  /* ===================== 앱 상단 탭 ===================== */
+  [hidden] { display: none !important; }
+  html { background: #000; }
+  body.app { padding: 0; background: #000; }
+  body.app.on-rotation { background: var(--paper); }
+  #view-rotation { padding: 0 20px 80px; background: var(--paper); }
+
+  :root {
+    --tm-yellow: #FEFF65;
+    --tm-lime: #B0FC66;
+    --tm-red: #DE4837;
+    --tm-blue: #3A86F6;
+    --tm-x: #DE4837;
+    --tm-gray: #8F8E93;
+    --tm-ko: "Noto Sans KR", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    --tm-num: "Barlow Condensed", "Noto Sans KR", sans-serif;
+    --app-h: 60px;
+  }
+
+  .appbar {
+    position: sticky; top: 0; z-index: 30; background: #000;
+    padding: calc(env(safe-area-inset-top, 0px) + 8px) 10px 8px;
+  }
+  .appbar .tabs {
+    display: flex; gap: 4px; max-width: 860px; margin: 0 auto;
+    background: #1C1C1C; border-radius: 12px; padding: 4px;
+  }
+  .appbar .tab {
+    flex: 1; border: 0; cursor: pointer; border-radius: 9px;
+    font-family: var(--tm-ko); font-size: 15px; font-weight: 700; letter-spacing: -0.02em;
+    padding: 9px 6px; background: transparent; color: var(--tm-gray);
+  }
+  .appbar .tab[aria-selected="true"] { background: var(--tm-yellow); color: #000; }
+  .appbar .tab:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+  /* ===================== 경기 타이머 (전광판) ===================== */
+  .tm {
+    --main: var(--tm-yellow);
+    display: flex; flex-direction: column; color: #000; background: #000;
+    height: calc(100dvh - var(--app-h) - env(safe-area-inset-top, 0px));
+    min-height: 480px; max-width: 900px; margin: 0 auto; font-family: var(--tm-ko);
+    -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+  }
+  .tm button { font-family: inherit; -webkit-tap-highlight-color: transparent; }
+
+  /* 상단: 대기 중엔 이름, 경기 중엔 작은 X */
+  .tm-head { display: flex; align-items: stretch; min-height: 46px; }
+  .tm-x {
+    width: 72px; height: 46px; border: 0; background: var(--tm-x); color: #fff; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  }
+  .tm-x svg { width: 22px; height: 22px; }
+  .tm-x.armed { width: auto; padding: 0 14px; flex-direction: row; gap: 6px; background: #fff; color: var(--tm-x); }
+  .tm-x.armed::after { content: "한 번 더 누르면 정지"; font-family: var(--tm-ko); font-size: 13px; font-weight: 900; }
+  .tm-brand {
+    display: flex; align-items: baseline; gap: 10px; padding: 0 16px; color: #fff;
+    font-weight: 900; font-size: 17px; letter-spacing: -0.03em; align-self: center;
+  }
+  .tm-brand small { color: var(--tm-yellow); font-size: 12px; font-weight: 700; letter-spacing: 0; }
+
+  /* 메인 패널 */
+  .tm-main {
+    flex: 1; min-height: 0; background: var(--main); display: flex; flex-direction: column;
+    transition: background-color .25s ease; overflow: hidden;
+  }
+
+  /* 대기 화면: 갤럭시 시계식 휠 */
+  .tm-setup { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 10px 12px; }
+  .tm-setup-label { font-size: clamp(22px, 6vw, 30px); font-weight: 900; letter-spacing: -0.04em; }
+  .tm-wheels { --wh: clamp(84px, 14vh, 150px); position: relative; display: flex; align-items: center; justify-content: center; height: calc(var(--wh) * 3); }
+  .tm-band { position: absolute; left: -12px; right: -12px; top: var(--wh); height: var(--wh); border-top: 4px solid #000; border-bottom: 4px solid #000; pointer-events: none; }
+  .tm-wheel {
+    height: 100%; width: 1.22em; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none;
+    font-family: var(--tm-num); font-weight: 800; font-size: calc(var(--wh) * 0.98); line-height: 1;
+    font-variant-numeric: tabular-nums; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+    mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+    -webkit-mask-image: linear-gradient(transparent, #000 30%, #000 70%, transparent);
+    outline: none; touch-action: pan-y;
+  }
+  .tm-wheel::-webkit-scrollbar { display: none; }
+  .tm-wheel .it { height: var(--wh); display: flex; align-items: center; justify-content: center; scroll-snap-align: center; opacity: .28; transition: opacity .12s; cursor: pointer; }
+  .tm-wheel .it.on { opacity: 1; }
+  .tm-wheel .sp { height: var(--wh); }
+  .tm-wheel:focus-visible { box-shadow: inset 0 0 0 3px #000; border-radius: 8px; }
+  .tm-colon { font-family: var(--tm-num); font-weight: 800; font-size: calc(var(--wh) * 0.98); line-height: 1; padding: 0 2px 0.08em; }
+  .tm-note { margin: 0; font-size: 14px; font-weight: 700; opacity: .6; text-align: center; }
+
+  /* 경기 화면 */
+  .tm-run { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 8px; text-align: center; }
+  .tm-label { font-size: clamp(34px, min(10vw, 7vh), 64px); font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; }
+  .tm-chip {
+    display: inline-block; margin-top: 4px; background: #000; color: var(--main);
+    font-size: 15px; font-weight: 900; padding: 3px 12px; border-radius: 999px;
+  }
+  .tm-chip:empty { visibility: hidden; }
+  .tm-sub { font-family: var(--tm-num); font-weight: 700; font-size: clamp(26px, min(8vw, 5.5vh), 44px); line-height: 1; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .tm-sub:empty { display: none; }
+  .tm[data-phase="gk"] .tm-chip:empty { display: none; }
+  .tm-time {
+    font-family: var(--tm-num); font-weight: 800; letter-spacing: -0.01em; line-height: .86;
+    font-size: 160px; font-variant-numeric: tabular-nums; white-space: nowrap; margin-top: 2px;
+  }
+  .tm-time.word { font-family: var(--tm-ko); font-weight: 900; letter-spacing: -0.06em; }
+
+  /* 하단: 전·후반 남은 | 재생 | 전체 남은 */
+  .tm-foot {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px;
+    background: #000; color: #fff; padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .tm-stat { text-align: center; min-width: 0; }
+  .tm-stat span { display: block; font-size: 13px; font-weight: 700; color: var(--tm-gray); }
+  .tm-stat b { display: block; font-family: var(--tm-num); font-weight: 800; font-size: clamp(36px, 11vw, 58px); line-height: 1; font-variant-numeric: tabular-nums; }
+  .tm-play {
+    width: clamp(92px, 27vw, 130px); aspect-ratio: 1.15 / 1; border: 0; background: var(--tm-lime); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; color: #000;
+  }
+  .tm-play svg { width: 42%; height: 42%; }
+  .tm-play:active { filter: brightness(.9); }
+  .tm-play:focus-visible, .tm-x:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+  /* 단계별 색 */
+  .tm[data-phase="play"] { --main: var(--tm-lime); }
+  .tm[data-phase="alarm"], .tm[data-phase="gk"], .tm[data-phase="done"] { --main: var(--tm-yellow); }
+  .tm[data-phase="last"] { --main: var(--tm-red); }
+  .tm[data-phase="last"] .tm-main { color: #fff; }
+  .tm[data-phase="last"] .tm-chip { background: #fff; }
+  .tm[data-phase="gk"] .tm-main, .tm[data-phase="last"] .tm-main { animation: tmFlash .5s steps(2) 4; }
+  @keyframes tmFlash { 50% { background: #fff; } }
+  @media (prefers-reduced-motion: reduce) { .tm .tm-main { animation: none !important; } }
+
+  /* 가로로 눕히면 경기 중 상단 탭을 숨겨 숫자를 최대한 크게 */
+  @media (orientation: landscape) and (max-height: 600px) {
+    body.tm-running .appbar { display: none; }
+    body.tm-running .tm { height: calc(100dvh - env(safe-area-inset-top, 0px)); min-height: 0; }
+    .tm-foot { padding-top: 6px; padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+    .tm-play { width: 96px; }
+    .tm-stat b { font-size: 40px; }
+    .tm-wheels { --wh: clamp(56px, 16vh, 100px); }
+  }
+
+  .tm-toast {
+    position: fixed; left: 50%; bottom: calc(150px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    background: #000; color: #fff; font-family: var(--tm-ko); font-size: 14px; font-weight: 700;
+    padding: 10px 16px; border-radius: 10px; z-index: 60; max-width: 90vw; text-align: center;
+  }
+  /* 설정 버튼(대기 중 재생 버튼 오른쪽) */
+  .tm-gear {
+    justify-self: center; border: 0; background: transparent; color: #fff; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 14px; border-radius: 12px;
+  }
+  .tm-gear svg { width: 34px; height: 34px; }
+  .tm-gear span { font-size: 13px; font-weight: 700; color: var(--tm-gray); }
+  .tm-gear:active { background: #1C1C1C; }
+  .tm-gear:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+
+  /* 설정 시트 */
+  .tm-sheet { position: fixed; inset: 0; z-index: 50; display: flex; align-items: flex-end; justify-content: center; font-family: var(--tm-ko); }
+  .tm-sheet-bg { position: absolute; inset: 0; background: rgba(0,0,0,.6); }
+  .tm-sheet-panel {
+    position: relative; width: 100%; max-width: 560px; background: #000; color: #fff; border-top: 4px solid var(--tm-yellow);
+    border-radius: 18px 18px 0 0; padding: 20px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+    display: flex; flex-direction: column; gap: 6px; animation: tmUp .18s ease-out;
+  }
+  @keyframes tmUp { from { transform: translateY(30px); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .tm-sheet-panel { animation: none; } }
+  .tm-sheet-title { font-size: 20px; font-weight: 900; color: var(--tm-yellow); margin-bottom: 4px; }
+  .tm-set-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 0; border-bottom: 1px solid #262626; }
+  .tm-set-row.col { flex-direction: column; align-items: stretch; }
+  .tm-set-k { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .tm-set-k b { font-size: 17px; font-weight: 900; }
+  .tm-set-k span { font-size: 13px; color: var(--tm-gray); font-weight: 500; }
+  .tm-switch {
+    flex: 0 0 auto; width: 58px; height: 34px; border-radius: 999px; border: 0; background: #3A3A3C; position: relative; cursor: pointer;
+    transition: background-color .15s;
+  }
+  .tm-switch i { position: absolute; top: 3px; left: 3px; width: 28px; height: 28px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .tm-switch[aria-checked="true"] { background: var(--tm-lime); }
+  .tm-switch[aria-checked="true"] i { transform: translateX(24px); background: #000; }
+  .tm-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #1C1C1C; border-radius: 12px; padding: 4px; }
+  .tm-seg button { border: 0; border-radius: 9px; background: transparent; color: var(--tm-gray); font-size: 17px; font-weight: 900; padding: 12px 6px; cursor: pointer; }
+  .tm-seg button[aria-checked="true"] { background: var(--tm-yellow); color: #000; }
+  .tm-done {
+    margin-top: 12px; border: 0; border-radius: 12px; background: var(--tm-lime);
+    color: #000; font-size: 18px; font-weight: 900; padding: 15px; cursor: pointer;
+  }
+  .tm-sheet button:focus-visible { outline: 3px solid var(--tm-yellow); outline-offset: 2px; }
+  .tm-foot > #tmStatL { grid-column: 1; grid-row: 1; }
+  .tm-foot > .tm-play { grid-column: 2; grid-row: 1; }
+  .tm-foot > #tmStatR, .tm-foot > .tm-gear { grid-column: 3; grid-row: 1; }
+  /* 알림음 선택도 스위치처럼 오른쪽에, 좁으면 아래로 내려감 */
+  .tm-set-row { flex-wrap: wrap; row-gap: 10px; }
+  .tm-set-row .tm-seg { flex: 0 0 auto; margin-left: auto; display: flex; gap: 4px; }
+  .tm-set-row .tm-seg button { padding: 8px 16px; font-size: 16px; white-space: nowrap; }
+  /* 경기 종료 후 재생 버튼 자리: 다시 시작 */
+  .tm-restart { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 16px; font-weight: 900; letter-spacing: -0.03em; }
+  .tm-play .tm-restart svg { width: 34px; height: 34px; }
+  .tm-play.restart { background: var(--tm-yellow); }
+  .tm[data-phase="done"] .tm-label, .tm[data-phase="done"] .tm-chip { display: none; }
+  .tm-time.word { white-space: pre-line; line-height: 1; }
+  /* 상단 탭: 흑백(전광판의 노랑·연두가 돋보이도록). 선택 = 흰 바탕 검정 글자, 나머지 = 회색 글자 */
+  .appbar .tab { border: 0; }
+  .appbar .tabs { background: #2C2C2E; }
+  .appbar .tab[aria-selected="false"] { background: #48484A; color: #F2F2F4; }
+  .appbar .tab[aria-selected="true"] { background: #fff; color: #000; }
+  /* 작은 화면 버튼 (타이머 작동 중에만) */
+  .tm-head { justify-content: space-between; }
+  .tm-pip {
+    margin-left: auto; height: 46px; padding: 0 14px; border: 0; background: transparent; color: #fff; cursor: pointer;
+    display: flex; align-items: center; gap: 6px; font-family: var(--tm-ko); font-size: 14px; font-weight: 700;
+  }
+  .tm-pip svg { width: 24px; height: 24px; }
+  .tm-pip:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+  .tm-pip-video { position: fixed; left: 0; bottom: 0; width: 2px; height: 2px; opacity: 0.01; pointer-events: none; }
+  .tm-mini { display: none; font-family: var(--tm-ko); font-weight: 700; font-size: 14px; opacity: .75; margin-top: 4px; }
+  /* 안드로이드 앱이 작은 창으로 줄어들었을 때: 단계 이름 + 경과 시간 + 경기 남은 시간만 */
+  @media (max-height: 320px) and (max-width: 520px) {
+    body.tm-running .appbar, body.tm-running .tm-head, body.tm-running .tm-foot { display: none !important; }
+    body.tm-running .tm { height: 100dvh; min-height: 0; }
+    body.tm-running .tm-run { padding: 4px; }
+    body.tm-running .tm-label { font-size: 16px; }
+    body.tm-running .tm-chip { display: none; }
+    body.tm-running .tm-sub { font-size: 16px; }
+    body.tm-running .tm-mini { display: block; }
+  }
+  /* 상단: G풋살 로고 + 탭 */
+  .appbar .bar { display: flex; align-items: center; gap: 10px; max-width: 860px; margin: 0 auto; }
+  .appbar .bar .tabs { flex: 1; min-width: 0; margin: 0; }
+  .appbar .logo { flex: 0 0 auto; display: flex; align-items: center; gap: 5px; padding-left: 2px; }
+  .appbar .logo b {
+    width: 32px; height: 32px; border-radius: 9px; background: var(--tm-yellow); color: #000;
+    display: flex; align-items: center; justify-content: center; font-family: var(--tm-num); font-size: 25px; font-weight: 800; line-height: 1;
+  }
+  .appbar .logo span { color: #fff; font-family: var(--tm-ko); font-size: 17px; font-weight: 900; letter-spacing: -0.05em; }
+  .appbar .tab { padding: 9px 4px; font-size: 15px; white-space: nowrap; }
+  @media (max-width: 350px) { .appbar .logo span { display: none; } }
+  .appbar img.logo { width: 36px; height: 36px; border-radius: 10px; display: block; padding: 0; flex: 0 0 auto; }
+  /* 안드로이드 앱 새 버전 안내 */
+  .upd { position: fixed; top: 0; left: 0; right: 0; z-index: 50; box-shadow: 0 2px 10px rgba(0,0,0,.35); display: flex; align-items: center; gap: 10px; padding: 10px 12px 10px 16px;
+    background: #FEFF65; color: #000; font: 700 15px/1.2 "Noto Sans KR", sans-serif; }
+  .upd span { flex: 1; }
+  .upd-go { background: #000; color: #FEFF65; text-decoration: none; font-weight: 900; padding: 7px 16px; border-radius: 999px; }
+  .upd-x { background: none; border: 0; color: #000; font-size: 18px; padding: 4px 6px; cursor: pointer; }
+  /* ===================== 로테이션: 타이머 계열 색 + 채팅 문답 ===================== */
+  body.app.on-rotation { background: #000; }
+  #view-rotation {
+    --ink: #F2F2F4; --ink-soft: #C7C7CC; --ink-faint: #8F8E93;
+    --rule: #3A3A3C; --rule-soft: #2C2C2E; --paper: #000; --bench: #1C1C1E;
+    --keeper: #FEFF65; --keeper-ink: #000; --keeper-soft: #3A3A12;
+    --turf: #1C1C1E; --turf-deep: #1C1C1E; --court: #000; --court-soft: #B0FC66;
+    --good: #B0FC66; --bad: #FF6450;
+    background: #000; color: var(--ink);
+  }
+  /* 예전 입력 화면은 숨기고(값은 문답이 채움), 결과 화면만 사용 */
+  #view-rotation .wrap > header, #view-rotation section.setup, #view-rotation .halfway, #view-rotation .go { display: none !important; }
+
+  /* 결과 화면 어두운 색 보정 */
+  #view-rotation .card .board { background: #1C1C1E; border-bottom-color: var(--tm-yellow); }
+  #view-rotation .card .glabel { color: var(--tm-gray); }
+  #view-rotation .zone.keep .zlabel, #view-rotation .bars .k b { color: var(--tm-yellow); }
+  #view-rotation .jersey.excluded path { fill: #3A1512; stroke: var(--bad); }
+  #view-rotation .btn-add, #view-rotation .btn-lg { background: var(--tm-lime); color: #000; border-color: var(--tm-lime); }
+  #view-rotation .btn-copy.copied { color: #000; }
+  #view-rotation .seg button[aria-pressed="true"] { background: var(--tm-yellow); color: #000; }
+  #view-rotation h2, #view-rotation details.fold summary { color: #fff; }
+  #view-rotation #result { margin-top: 8px; }
+
+  /* 채팅 */
+  .rc { max-width: 560px; margin: 0 auto; padding: 18px 0 8px; font-family: var(--tm-ko); }
+  .rc-thread { display: flex; flex-direction: column; gap: 10px; }
+  .bub { max-width: 86%; padding: 12px 16px; border-radius: 20px; font-size: 17px; font-weight: 700; line-height: 1.45; letter-spacing: -0.02em; overflow-wrap: anywhere; }
+  .bub.bot { align-self: flex-start; background: #1C1C1E; color: #fff; border-bottom-left-radius: 6px; }
+  .bub.bot .soft { color: var(--tm-gray); font-size: 14px; font-weight: 500; }
+  .bub.bot b { color: var(--tm-yellow); }
+  .bub.me {
+    align-self: flex-end; background: var(--tm-yellow); color: #000; border: 0; border-bottom-right-radius: 6px;
+    font-family: inherit; text-align: right; cursor: pointer; display: flex; align-items: baseline; gap: 8px;
+  }
+  .bub.me .edit { font-size: 11px; font-weight: 700; opacity: .5; }
+  .bub.me:disabled { cursor: default; } .bub.me:disabled .edit { display: none; }
+  .bub.me:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .typing { display: inline-flex; gap: 5px; padding: 4px 0; }
+  .typing i { width: 7px; height: 7px; border-radius: 50%; background: #8F8E93; animation: rcDot 1s infinite; }
+  .typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+  @keyframes rcDot { 0%, 60%, 100% { opacity: .3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+  @media (prefers-reduced-motion: reduce) { .typing i { animation: none; } }
+
+  .rc-panel { display: flex; flex-wrap: wrap; gap: 8px; padding: 4px 0 6px; }
+  .rc-panel.col { flex-direction: column; flex-wrap: nowrap; align-items: stretch; }
+  .rc-chip {
+    flex: 1 1 calc(33.333% - 8px); min-height: 54px; padding: 8px 10px; border-radius: 14px; border: 2px solid #3A3A3C;
+    background: #111; color: #fff; font-family: inherit; font-size: 17px; font-weight: 900; letter-spacing: -0.02em; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  }
+  .rc-chip.wide { flex-basis: 100%; }
+  .rc-chip small { font-size: 12.5px; font-weight: 500; color: var(--tm-gray); }
+  .rc-chip.primary { background: var(--tm-lime); border-color: var(--tm-lime); color: #000; }
+  .rc-chip.primary small { color: #2a3d18; }
+  .rc-chip:active { filter: brightness(.9); }
+  .rc-chip:disabled { opacity: .35; cursor: default; }
+  .rc-chip:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+  .rc-chip .dot { width: 22px; height: 22px; border-radius: 50%; box-shadow: 0 0 0 2px #fff inset; }
+  .rc-chip:has(.dot) { flex-direction: row; gap: 8px; }
+  .rc-hint { flex-basis: 100%; margin: 2px 0 0; color: var(--tm-gray); font-size: 13.5px; }
+
+  .rc-other { flex-basis: 100%; display: flex; align-items: center; gap: 8px; }
+  .rc-other input {
+    width: 96px; font-family: var(--tm-num); font-size: 30px; font-weight: 800; padding: 6px 10px; text-align: center;
+    background: #111; color: #fff; border: 2px solid var(--tm-yellow); border-radius: 12px;
+  }
+  .rc-other span { font-size: 18px; font-weight: 900; }
+  .rc-other .rc-chip { flex: 1; }
+
+  /* 경기 수 휠 */
+  .rc-wheel-wrap { position: relative; height: 168px; border-radius: 16px; background: #111; overflow: hidden; }
+  .rc-wheel-wrap::before { content: ""; position: absolute; left: 12px; right: 12px; top: 56px; height: 56px; border-top: 3px solid var(--tm-yellow); border-bottom: 3px solid var(--tm-yellow); pointer-events: none; }
+  .rc-wheel {
+    height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; scrollbar-width: none; overscroll-behavior: contain; outline: none;
+    mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent); -webkit-mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent);
+  }
+  .rc-wheel::-webkit-scrollbar { display: none; }
+  .rc-wheel .sp { height: 56px; }
+  .rc-wheel .it {
+    height: 56px; scroll-snap-align: center; display: flex; align-items: baseline; justify-content: center; gap: 4px; padding-top: 4px;
+    font-family: var(--tm-num); font-size: 42px; font-weight: 800; color: #fff; opacity: .3; cursor: pointer; font-variant-numeric: tabular-nums;
+  }
+  .rc-wheel .it small { font-family: var(--tm-ko); font-size: 15px; font-weight: 700; }
+  .rc-wheel .it.on { opacity: 1; color: var(--tm-yellow); }
+  .rc-wheel:focus-visible + *, .rc-wheel:focus-visible { box-shadow: inset 0 0 0 2px #fff; }
+
+  /* 경기별 인원 개별 입력 */
+  .rc-games { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .rc-game { display: flex; align-items: center; gap: 8px; background: #111; border-radius: 12px; padding: 6px 8px; }
+  .rc-game .no { flex: 0 0 auto; font-size: 13px; font-weight: 700; color: var(--tm-gray); min-width: 38px; }
+  .rc-seg { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  .rc-seg button { border: 0; border-radius: 8px; background: #2C2C2E; color: #C7C7CC; font-family: var(--tm-num); font-size: 17px; font-weight: 700; padding: 7px 0; cursor: pointer; }
+  .rc-seg button[aria-pressed="true"] { background: var(--tm-yellow); color: #000; }
+  .rc-seg button:disabled { opacity: .3; }
+
+  /* 특수 상황 */
+  .rc-form { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .rc-form label { display: flex; align-items: center; gap: 6px; background: #111; border-radius: 12px; padding: 6px 8px; font-size: 13.5px; font-weight: 700; color: var(--tm-gray); min-width: 0; }
+  .rc-form label.full { grid-column: 1 / -1; }
+  .rc-form select { flex: 1; min-width: 0; background: #2C2C2E; color: #fff; border: 0; border-radius: 8px; font-family: var(--tm-num); font-size: 20px; font-weight: 700; padding: 6px 4px; }
+  .rc-form label.full select { font-family: var(--tm-ko); font-size: 16px; }
+  .rc-cons { display: flex; flex-direction: column; gap: 6px; }
+  .rc-con { display: flex; align-items: center; gap: 10px; background: #1C1C1E; border-radius: 10px; padding: 8px 10px; font-size: 14px; }
+  .rc-con b { color: var(--tm-yellow); }
+  .rc-con button { margin-left: auto; border: 0; background: none; color: var(--bad); font-family: inherit; font-weight: 700; cursor: pointer; }
+  .rc-panel.col .rc-chip { flex: 0 0 auto; }
+  @media (max-width: 360px) { .rc-form { grid-template-columns: 1fr 1fr; } }
+  .bub.me .edit { flex: 0 0 auto; white-space: nowrap; }
+  .rc-wheel .it { align-items: center; padding-top: 0; }
+  #view-rotation .jersey.off path { fill: #2C2C2E; stroke: #8F8E93; }
+  #view-rotation .jersey.off text { fill: #D1D1D6; }
+  /* ===== 카카오톡 스타일 채팅 ===== */
+  #view-rotation { --kt-bg: #B2C7D9; --kt-yellow: #FEE500; }
+  .rc {
+    max-width: none; margin: 0 -20px; padding: 16px max(14px, env(safe-area-inset-right, 0px)) 22px max(14px, env(safe-area-inset-left, 0px));
+    background: var(--kt-bg); min-height: calc(100dvh - var(--app-h, 60px));
+  }
+  .rc-thread { max-width: 640px; margin: 0 auto; gap: 12px; }
+  .kt-row { display: flex; gap: 8px; align-items: flex-start; }
+  .kt-row.me { justify-content: flex-end; align-items: flex-end; gap: 6px; }
+  .kt-av { flex: 0 0 auto; width: 42px; height: 42px; border-radius: 15px; background: var(--kt-yellow); display: flex; align-items: center; justify-content: center; }
+  .kt-av svg { width: 26px; height: 26px; }
+  .kt-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; max-width: calc(100% - 50px); }
+  .kt-name { font-size: 13px; font-weight: 500; color: #3B4A57; }
+  .kt-line { display: flex; align-items: flex-end; gap: 6px; }
+  .kt-time { flex: 0 0 auto; font-size: 11px; color: #56636E; white-space: nowrap; padding-bottom: 2px; }
+  .bub { position: relative; max-width: none; font-size: 18px; font-weight: 500; line-height: 1.5; letter-spacing: -0.02em; border-radius: 16px; padding: 10px 14px; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
+  .bub.bot { background: #fff; color: #111; border-top-left-radius: 4px; border-bottom-left-radius: 16px; }
+  .bub.bot .soft { color: #6B7680; font-size: 15px; }
+  .bub.bot b { color: #111; background: var(--kt-yellow); padding: 0 3px; border-radius: 4px; }
+  .bub.me { background: var(--kt-yellow); color: #111; font-weight: 700; border-top-right-radius: 4px; border-bottom-right-radius: 16px; max-width: 78%; }
+  .bub.me .edit { color: #6B5A00; opacity: .8; }
+  .bub.me:focus-visible { outline: 3px solid #111; }
+  .typing i { background: #9AA5AE; }
+
+  /* 답 선택 버튼: 말풍선 아래, 프로필 폭만큼 들여쓰기 */
+  .rc-panel { padding: 2px 0 4px 50px; gap: 8px; }
+  .rc-chip { background: #fff; color: #111; border: 1px solid #D5DEE6; border-radius: 14px; min-height: 56px; font-size: 18px; font-weight: 700; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
+  .rc-chip small { color: #6B7680; }
+  .rc-chip.primary { background: var(--kt-yellow); border-color: var(--kt-yellow); color: #111; }
+  .rc-chip.primary small { color: #5A4E00; }
+  .rc-chip:focus-visible { outline: 3px solid #111; }
+  .rc-chip .dot { box-shadow: 0 0 0 1.5px rgba(0,0,0,.25) inset; }
+  .rc-hint { color: #3B4A57; }
+  .rc-other input { background: #fff; color: #111; border-color: var(--kt-yellow); border-width: 3px; }
+  .rc-other span { color: #111; }
+  .rc-wheel-wrap { background: #fff; box-shadow: 0 1px 1px rgba(0,0,0,.06); }
+  .rc-wheel-wrap::before { border-color: var(--kt-yellow); border-width: 3px; background: rgba(254,229,0,.18); }
+  .rc-wheel .it { color: #111; }
+  .rc-wheel .it.on { color: #111; }
+  .rc-game { background: #fff; }
+  .rc-game .no { color: #56636E; }
+  .rc-seg button { background: #EEF2F5; color: #56636E; }
+  .rc-seg button[aria-pressed="true"] { background: var(--kt-yellow); color: #111; }
+  .rc-form label { background: #fff; color: #56636E; }
+  .rc-form select { background: #EEF2F5; color: #111; }
+  .rc-con { background: #fff; color: #111; }
+  .rc-con b { color: #111; background: var(--kt-yellow); padding: 0 4px; border-radius: 4px; }
+  #view-rotation .wrap { max-width: none; }
+  #view-rotation #result { max-width: 860px; margin: 0 auto; padding-top: 6px; }
+  @media (max-width: 380px) { .rc-panel { padding-left: 0; } .bub { font-size: 17px; } }
+  .rc { padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
+  .kt-av { width: 38px; height: 38px; border-radius: 14px; }
+  .kt-av svg { width: 24px; height: 24px; }
+  .kt-col { max-width: calc(100% - 46px); }
+  .bub { font-size: 17px; }
+  .rc-panel { padding-left: 46px; }
+  @media (max-width: 380px) { .rc-panel { padding-left: 0; } .bub { font-size: 16px; } }
+  .bub { padding: 10px 12px; letter-spacing: -0.035em; }
+  .kt-line { gap: 4px; } .kt-time { font-size: 10.5px; }
+  /* ===== 결과: 한 경기 한 줄 ===== */
+  .gl { --pw: 34px; display: flex; flex-direction: column; font-family: var(--tm-ko); }
+  .gr {
+    display: grid; grid-template-columns: 42px calc(var(--kc) * var(--pw) + (var(--kc) - 1) * 4px) calc(var(--rc) * var(--pw) + (var(--rc) - 1) * 4px) minmax(0, 1fr);
+    align-items: center; gap: 10px; padding: 9px 4px; border-bottom: 1px solid #2C2C2E;
+  }
+  .gr:nth-child(odd):not(.head) { background: #0E0E10; }
+  .gr.head { padding: 4px 4px 6px; border-bottom: 2px solid #3A3A3C; font-size: 12px; font-weight: 700; color: var(--tm-gray); }
+  .gr.head span:nth-child(2) { color: var(--tm-yellow); }
+  .gno { display: flex; flex-direction: column; align-items: center; line-height: 1; }
+  .gno b { font-family: var(--tm-num); font-size: 26px; font-weight: 800; color: #fff; }
+  .gno small { font-family: var(--tm-num); font-size: 12px; font-weight: 700; color: var(--tm-lime); margin-top: 2px; }
+  .gk, .rs { display: flex; gap: 4px; }
+  .pl {
+    width: var(--pw, 34px); height: var(--pw, 34px); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center;
+    font-family: var(--tm-num); font-size: 21px; font-weight: 800; font-variant-numeric: tabular-nums;
+  }
+  .pl.k { background: var(--tm-yellow); color: #000; }
+  .pl.r { background: #48484A; color: #fff; }
+  .pl.x { background: transparent; color: #FF6450; box-shadow: inset 0 0 0 2px #FF6450; }
+  .rs .none { color: #48484A; font-weight: 700; padding-left: 10px; }
+  .fd { display: flex; flex-wrap: wrap; gap: 2px 7px; font-family: var(--tm-num); font-size: 16px; font-weight: 600; color: #AEAEB2; min-width: 0; }
+  .gl-note { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; font-size: 13px; color: var(--tm-gray); font-family: var(--tm-ko); }
+  .gl-note .pl { --pw: 22px; width: 22px; height: 22px; font-size: 14px; border-radius: 6px; }
+  @media (max-width: 360px) { .gl { --pw: 30px; } .pl { font-size: 18px; } .gr { gap: 7px; } .fd { font-size: 14px; } }
+  /* 휴식 → 키퍼 → 필드 순서, 필드도 테두리만 있는 버튼 모양 */
+  .gl { --pw: 34px; --fw: 28px; --rc: 2; --kc: 2; }
+  .gr { grid-template-columns: 40px calc(var(--rc) * var(--pw) + (var(--rc) - 1) * 4px) calc(var(--kc) * var(--pw) + (var(--kc) - 1) * 4px) minmax(0, 1fr); gap: 8px; }
+  .gr.head span:nth-child(2) { color: #C7C7CC; }
+  .gr.head span:nth-child(3) { color: var(--tm-yellow); }
+  .pl { font-size: calc(var(--pw) * 0.62); border-radius: calc(var(--pw) * 0.28); }
+  .fd { flex-wrap: nowrap; gap: 4px; }
+  .pl.f { width: var(--fw); height: var(--fw); font-size: calc(var(--fw) * 0.6); border-radius: calc(var(--fw) * 0.28); background: transparent; color: #D1D1D6; box-shadow: inset 0 0 0 1.5px #636366; font-weight: 700; }
+  .gl-note .pl.f { width: 22px; height: 22px; font-size: 13px; }
+  @media (max-width: 360px) { .gr { gap: 6px; } }
+  .rc-form { grid-template-columns: 1fr 1fr; }
+  .rc-cons .rc-hint { margin: 2px 2px 0; }
+  /* 답 선택 영역은 질문(흰 말풍선)과 구분되도록 연노랑으로: 내 답(노랑)으로 이어지는 색 */
+  #view-rotation { --kt-pick: #FFF6BF; --kt-pick-line: #E9CF00; }
+  .rc-chip { background: var(--kt-pick); border: 1.5px solid var(--kt-pick-line); }
+  .rc-chip.primary { background: var(--kt-yellow); border-color: #D9C000; box-shadow: 0 2px 0 #D9C000; }
+  .rc-chip:disabled { background: #E9EEF2; border-color: #D5DEE6; }
+  .rc-wheel-wrap, .rc-game, .rc-form label, .rc-con { background: var(--kt-pick); box-shadow: inset 0 0 0 1.5px var(--kt-pick-line); }
+  .rc-seg button, .rc-form select { background: #fff; }
+  .rc-other input { background: var(--kt-pick); }
+  /* 답 선택 영역: 카톡 메시지 입력란 같은 연회색 (전송 버튼처럼 주요 버튼만 노랑) */
+  #view-rotation { --kt-pick: #F2F2F2; --kt-pick-line: #DCDCDC; }
+  .rc-chip.primary { box-shadow: none; border-color: var(--kt-yellow); }
+  .rc-chip:disabled { background: #E3E7EB; border-color: #D5DEE6; }
+  .rc-wheel-wrap::before { background: rgba(254,229,0,.35); }
+  .rc-rows { display: flex; flex-direction: column; gap: 8px; }
+  .rc-form { position: relative; padding: 8px; border-radius: 14px; background: rgba(255,255,255,.45); }
+  .rc-row-x { grid-column: 1 / -1; justify-self: end; border: 0; background: none; color: #E0403A; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; padding: 2px 4px; }
+  #view-rotation .btn-new {
+    display: block; width: 100%; margin: 0 0 8px; padding: 14px 24px; border-radius: 9px; cursor: pointer;
+    font-family: var(--tm-ko); font-size: 16px; font-weight: 900; background: transparent; color: #fff; border: 2px solid #fff;
+  }
+  #view-rotation .btn-new:active { background: #1C1C1E; }
+  #view-rotation .btn-new:focus-visible { outline: 3px solid var(--tm-yellow); outline-offset: 2px; }
+  /* 경기 도중 부상자·조퇴자 */
+  #view-rotation .mid { display: flex; flex-direction: column; gap: 10px; font-family: var(--tm-ko); }
+  #view-rotation .mid-line { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 17px; font-weight: 700; color: #fff; }
+  #view-rotation .mid select {
+    background: #1C1C1E; color: #fff; border: 1.5px solid #48484A; border-radius: 10px; padding: 8px 10px;
+    font-family: var(--tm-num); font-size: 22px; font-weight: 800; min-width: 74px;
+  }
+  #view-rotation .mid select.wide { flex: 1; font-family: var(--tm-ko); font-size: 16px; }
+  #view-rotation .mid .btn-lg { margin-top: 2px; font-family: var(--tm-ko); font-weight: 900; font-size: 16px; }
+  #view-rotation .mid-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  #view-rotation .mid-list span { background: #3A1512; color: #FF8A7A; border-radius: 8px; padding: 4px 10px; font-size: 13px; font-weight: 700; }
+  #view-rotation .mid .fold-lead { margin: 0; color: var(--tm-gray); }
+  /* 경기 도중 부상자·조퇴자: 빨간 제목 띠 + 카톡 배경 입력란 */
+  #view-rotation #midSection { border-top: 0; margin: 14px 0 6px; border-radius: 16px; overflow: hidden; background: var(--kt-bg); }
+  #view-rotation #midSection summary {
+    background: var(--tm-red); color: #fff; padding: 14px 16px; font-family: var(--tm-ko); font-size: 18px; font-weight: 900; letter-spacing: -0.03em;
+  }
+  #view-rotation #midSection summary .chev { color: #fff; opacity: .85; }
+  #view-rotation #midSection summary:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
+  #view-rotation #midSection .fold-body { padding: 14px 14px 16px; }
+  #view-rotation .mid-line { color: #111; }
+  #view-rotation .mid select { background: #fff; color: #111; border: 1.5px solid #D5DEE6; }
+  #view-rotation .mid .btn-lg { background: var(--kt-yellow); border-color: var(--kt-yellow); color: #111; }
+  #view-rotation .mid-list span { background: #fff; color: #D3352C; box-shadow: inset 0 0 0 1.5px #F2B8B3; }
+  #view-rotation .mid .fold-lead { color: #3B4A57; }
+  #view-rotation .mid-err { margin: -4px 0 0; color: #D3352C; font-size: 14px; font-weight: 700; min-height: 0; }
+  #view-rotation .mid-err:empty { display: none; }
+  #view-rotation .mid-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  #view-rotation .mid-seg button {
+    min-height: 52px; border-radius: 12px; border: 1.5px solid #D5DEE6; background: #fff; color: #111; cursor: pointer;
+    font-family: var(--tm-ko); font-size: 16px; font-weight: 800; letter-spacing: -0.03em; padding: 6px 8px;
+  }
+  #view-rotation .mid-seg button[aria-checked="true"] { background: var(--tm-red); border-color: var(--tm-red); color: #fff; }
+  #view-rotation .mid-seg button:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+  /* 열외 종류 버튼 (경기 전·경기 도중 공통) */
+  .mode-seg { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mode-seg button {
+    min-height: 50px; border-radius: 12px; border: 1.5px solid #D5DEE6; background: #fff; color: #111; cursor: pointer;
+    font-family: var(--tm-ko); font-size: 15.5px; font-weight: 800; letter-spacing: -0.03em; padding: 6px 6px;
+  }
+  .mode-seg button[aria-checked="true"] { background: var(--tm-red); border-color: var(--tm-red); color: #fff; }
+  .mode-seg button:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+  /* 경기 도중: 경기 전 입력 화면과 같은 카드 모양 */
+  #view-rotation .mid .rc-form label { background: var(--kt-pick); box-shadow: inset 0 0 0 1.5px var(--kt-pick-line); color: #56636E; }
+  #view-rotation .mid .rc-form select { background: #fff; color: #111; border: 0; min-width: 0; font-size: 20px; padding: 6px 4px; }
+  #view-rotation .mid-line select { background: #fff; color: #111; border: 1.5px solid #D5DEE6; }
+  #view-rotation .mid .rc-hint { color: #3B4A57; }
+  #view-rotation .mid-add {
+    min-height: 52px; border-radius: 14px; border: 1.5px solid var(--kt-pick-line); background: var(--kt-pick); color: #111; cursor: pointer;
+    font-family: var(--tm-ko); font-size: 17px; font-weight: 800;
+  }
+  #view-rotation .mid-add:focus-visible { outline: 3px solid #111; outline-offset: 2px; }
+  /* 열외 종류 버튼: 선택 = 연노랑, 미선택 = 회색 글자 (경기 전·경기 도중 공통) */
+  .mode-seg button { color: #9AA3AB; background: #fff; border-color: #D5DEE6; }
+  .mode-seg button[aria-checked="true"] { background: #FFF3A8; border-color: #E6CF3A; color: #111; }
+  /* 경기 도중 제목: 빨간 띠 대신 검정 바탕 + 붉은 글자 */
+  #view-rotation #midSection { background: transparent; border-radius: 0; overflow: visible; border-top: 1px solid var(--rule-soft); }
+  #view-rotation #midSection summary { background: transparent; color: #FF7A6B; padding: 18px 0; font-size: 22px; }
+  #view-rotation #midSection summary .chev { color: #FF7A6B; }
+  #view-rotation #midSection summary:focus-visible { outline: 2px solid #FF7A6B; outline-offset: 2px; }
+  #view-rotation #midSection .fold-body { background: var(--kt-bg); border-radius: 16px; margin-bottom: 18px; }
+  #view-rotation #midSection { border-top: 0; margin-top: 0; }
+</style>
+</head>
+<body class="app">
+<nav class="appbar">
+  <div class="bar">
+    <img class="logo" src="icon-192.png" alt="G풋살" width="34" height="34">
+    <div class="tabs" role="tablist" aria-label="화면 선택">
+      <button class="tab" role="tab" id="tabTimer" data-view="timer" aria-selected="true" aria-controls="view-timer">경기 타이머</button>
+      <button class="tab" role="tab" id="tabRotation" data-view="rotation" aria-selected="false" aria-controls="view-rotation">로테이션 구성</button>
+    </div>
+  </div>
+</nav>
+
+<main class="tm" id="view-timer" role="tabpanel" aria-labelledby="tabTimer" data-phase="idle">
+  <div class="tm-head" id="tmHead" hidden>
+    <button class="tm-x" id="tmStop" aria-label="정지하고 처음으로" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+    <button class="tm-pip" id="tmPip" aria-label="작은 화면으로 띄우기" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><rect x="2.5" y="4" width="19" height="16" rx="2.5"/><rect x="11.5" y="11.5" width="8" height="6" rx="1.2" fill="currentColor"/></svg>
+      <span>작은 화면</span>
+    </button>
+  </div>
+
+  <div class="tm-main" id="tmMain">
+    <div class="tm-setup" id="tmSetup">
+      <div class="tm-setup-label">전·후반 경기시간</div>
+      <div class="tm-wheels">
+        <div class="tm-band" aria-hidden="true"></div>
+        <div class="tm-wheel" id="tmWheelM" tabindex="0" role="spinbutton" aria-label="분" aria-valuemin="0" aria-valuemax="10"></div>
+        <div class="tm-colon" aria-hidden="true">:</div>
+        <div class="tm-wheel" id="tmWheelS" tabindex="0" role="spinbutton" aria-label="초" aria-valuemin="0" aria-valuemax="50"></div>
+      </div>
+    </div>
+    <div class="tm-run" id="tmRun" hidden aria-live="polite">
+      <div class="tm-label" id="tmLabel">준비</div>
+      <span class="tm-chip" id="tmChip"></span>
+      <div class="tm-sub" id="tmSub"></div>
+      <div class="tm-time" id="tmTime">00:00</div>
+      <div class="tm-mini" id="tmMini"></div>
+    </div>
+  </div>
+
+  <div class="tm-foot">
+    <div class="tm-stat" id="tmStatL" hidden><span id="tmHalfK">전반 남은 시간</span><b id="tmHalf">05:00</b></div>
+    <button class="tm-play" id="tmPlay" aria-label="시작">
+      <svg id="tmIcoPlay" viewBox="0 0 24 24" fill="currentColor"><path d="M6 3.5v17l15-8.5z"/></svg>
+      <svg id="tmIcoPause" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M5 3h5v18H5zM14 3h5v18h-5z"/></svg>
+      <span class="tm-restart" id="tmEndBtn" hidden><svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14"/></svg>경기 종료</span>
+      <span class="tm-restart" id="tmRestart" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>다시 시작</span>
+    </button>
+    <div class="tm-stat" id="tmStatR" hidden><span>전체 남은 시간</span><b id="tmTotal">10:00</b></div>
+    <button class="tm-gear" id="tmGear" aria-label="설정" aria-haspopup="dialog">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34H9a1.7 1.7 0 0 0 1.03-1.56V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.56 1.03z"/></svg>
+      <span>설정</span>
+    </button>
+  </div>
+</main>
+<div class="tm-sheet" id="tmSheet" hidden>
+  <div class="tm-sheet-bg" data-close></div>
+  <div class="tm-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="tmSheetTitle">
+    <div class="tm-sheet-title" id="tmSheetTitle">설정</div>
+    <div class="tm-set-row">
+      <div class="tm-set-k"><b>3·2·1 카운트다운 알림</b></div>
+      <button class="tm-switch" id="tmCd" role="switch" aria-checked="true" aria-label="3·2·1 카운트다운 알림"><i></i></button>
+    </div>
+    <div class="tm-set-row">
+      <div class="tm-set-k"><b>시작·종료 알림음</b></div>
+      <div class="tm-seg" role="radiogroup" aria-label="시작·종료 알림음">
+        <button role="radio" data-sv="whistle" aria-checked="true">휘슬</button>
+        <button role="radio" data-sv="buzzer" aria-checked="false">부저음</button>
+      </div>
+    </div>
+    <button class="tm-done" data-close>완료</button>
+  </div>
+</div>
+<div class="tm-toast" id="tmToast" role="status" hidden></div>
+
+<div id="view-rotation" role="tabpanel" aria-labelledby="tabRotation" hidden>
+<div class="wrap">
+<div class="rc" id="rotChat">
+  <div class="rc-thread" id="rcThread" aria-live="polite"></div>
+</div>
+
+
+<header>
+  <svg class="court-bg" viewBox="0 0 400 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="none" stroke="#fff" stroke-width="1.4">
+      <rect x="10" y="10" width="380" height="160" rx="2"/>
+      <line x1="200" y1="10" x2="200" y2="170"/>
+      <circle cx="200" cy="90" r="34"/>
+      <circle cx="200" cy="90" r="2.5" fill="#fff"/>
+      <path d="M10 56 h34 a46 46 0 0 1 0 68 h-34"/>
+      <path d="M390 56 h-34 a46 46 0 0 0 0 68 h34"/>
+    </g>
+  </svg>
+  <div class="inner">
+    <h1>풋살 로테이션 보드</h1>
+    <p>등번호 순서대로, 아래 우선순위에 맞춰 경기별 배치를 계산합니다.</p>
+    <ul class="priority">
+      <li><b>1</b> 연속 휴식·연속 골키퍼 금지</li>
+      <li><b>2</b> 횟수 균등</li>
+      <li><b>3</b> 골키퍼·휴식 인접 회피</li>
+      <li><b>4</b> 등번호 묶음</li>
+    </ul>
+  </div>
+</header>
+
+<section class="setup">
+  <h2>참가 인원</h2>
+  <div class="field-row">
+    <input type="text" id="teamName" class="team-input">
+    <span>팀</span>
+    <input type="number" id="numPlayers" value="8" min="2" max="30">
+    <span>명이 뜁니다</span>
+  </div>
+</section>
+
+<section class="setup">
+  <h2>경기 구성</h2>
+  <div class="field-row">
+    <input type="number" id="numGames" value="9" min="1" max="20">
+    <span>경기</span>
+    <button class="preset" onclick="renderGames()">경기 수 적용</button>
+  </div>
+  <div class="presets">
+    <button class="preset" onclick="setAll(6)">전부 6:6</button>
+    <button class="preset" onclick="setAll(5)">전부 5:5</button>
+  </div>
+  <div class="games" id="gameList"></div>
+</section>
+
+<section class="setup">
+  <h2>특수 상황</h2>
+  <p class="fold-lead">부상·지각처럼 미리 아는 특수 상황이 있으면 등록하세요. 경기 열외는 해당 경기에서 아예 빠지고, 골키퍼만 제외는 필드나 휴식은 가능하되 골키퍼만 맡지 않습니다. 종료 경기를 비워두면 마지막 경기까지 적용됩니다.</p>
+  <div class="field-row">
+    <input type="number" id="csPlayer" class="cs-num" min="1">
+    <span>번,</span>
+    <input type="number" id="csFrom" class="cs-num" min="1">
+    <span>경기부터</span>
+    <input type="number" id="csTo" class="cs-num" min="1">
+    <span>경기까지</span>
+    <select id="csType" class="cs-select">
+      <option value="exclude">경기 열외 (지각·부상)</option>
+      <option value="noKeeper">골키퍼만 제외</option>
+    </select>
+    <button class="btn-add" onclick="addConstraint(1)">추가</button>
+  </div>
+  <div class="constraint-list constraintListView" id="constraintList"></div>
+</section>
+
+<div class="halfway"><span class="ln"></span><span class="circle"></span><span class="ln"></span></div>
+
+<div class="go">
+  <button class="primary" onclick="run()">배치 계산</button>
+  <button class="secondary" onclick="run()">다시 계산</button>
+</div>
+
+<div id="result">
+  <section>
+    <h2 id="scheduleTitle">경기별 배치</h2>
+    <div id="schedule"></div>
+    <button class="btn-copy" id="copyBtn" onclick="copyResultText()">텍스트로 복사</button>
+    <p class="foot" id="copyHint">이 버튼을 누르면 위 배치를 텍스트로 복사해 단톡방 등에 바로 붙여넣을 수 있습니다.</p>
+  </section>
+  <details class="fold" id="midSection" style="display:none">
+    <summary>경기 도중 변동 <span class="chev">▾</span></summary>
+    <div class="fold-body">
+      <p class="fold-lead">부상·지각 등 새로 생긴 사정을 먼저 등록한 뒤, 완료된 경기 수를 입력하고 재계산하세요. 이미 끝난 경기는 그대로 유지됩니다. 종료 경기를 비워두면 마지막 경기까지 적용됩니다.</p>
+      <div class="field-row">
+        <input type="number" id="csPlayer2" class="cs-num" min="1">
+        <span>번,</span>
+        <input type="number" id="csFrom2" class="cs-num" min="1">
+        <span>경기부터</span>
+        <input type="number" id="csTo2" class="cs-num" min="1">
+        <span>경기까지</span>
+        <select id="csType2" class="cs-select">
+          <option value="exclude">경기 열외 (지각·부상)</option>
+          <option value="noKeeper">골키퍼만 제외</option>
+        </select>
+        <button class="btn-add" onclick="addConstraint(2)">추가</button>
+      </div>
+      <div class="constraint-list constraintListView" id="constraintList2"></div>
+      <div class="field-row" style="margin-top:14px">
+        <span>완료된 경기</span>
+        <input type="number" id="lockedCount" class="cs-num" min="0">
+        <span>경기까지 확정</span>
+      </div>
+      <button class="btn-lg" onclick="runContinue()">이후부터 다시 계산</button>
+    </div>
+  </details>
+  <details class="fold">
+    <summary>번호별 누적 <span class="chev">▾</span><span class="hint" id="summaryHint"></span></summary>
+    <div class="fold-body">
+      <p class="fold-lead">각 번호가 9경기 동안 몇 번 뛰고, 몇 번 골키퍼를 맡고, 몇 번 쉬는지 보여줍니다. 출전 횟수는 전체 경기에서 휴식을 뺀 값이고, 골키퍼도 출전에 포함됩니다.</p>
+      <div class="tally" id="summary"></div>
+    </div>
+  </details>
+  <details class="fold" style="border-bottom:0">
+    <summary>우선순위 충족 <span class="chev">▾</span><span class="hint" id="qualityHint"></span></summary>
+    <div class="fold-body">
+      <p class="fold-lead">배치를 계산할 때 적용한 네 가지 조건이 실제로 지켜졌는지 확인합니다. 위 조건이 아래 조건보다 항상 우선하며, 상위 조건을 지키기 위해 하위 조건은 일부 포기할 수 있습니다.</p>
+      <div class="checks" id="quality"></div>
+    </div>
+  </details>
+</div>
+
+</div>
+</div><!-- /view-rotation -->
+<script>
+function playerLabel(i) { return (i + 1); }
+
+function renderGames() {
+  const n = parseInt(document.getElementById('numGames').value) || 9;
+  const list = document.getElementById('gameList');
+  const prev = [...list.querySelectorAll('.seg')].map(s => s.dataset.value);
+  list.innerHTML = '';
+  for (let i = 0; i < n; i++) {
+    const def = prev[i] || '6';
+    const div = document.createElement('div');
+    div.className = 'game-set';
+    div.innerHTML = '<span class="gno">' + (i + 1) + '</span>' +
+      '<div class="seg" data-value="' + def + '">' +
+      [6, 5].map(v =>
+        '<button type="button" aria-pressed="' + (def == v ? 'true' : 'false') +
+        '" onclick="pick(this,' + v + ')">' + v + ':' + v + '</button>').join('') +
+      '</div>';
+    list.appendChild(div);
+  }
+}
+
+function pick(btn, v) {
+  const seg = btn.parentElement;
+  seg.dataset.value = String(v);
+  [...seg.children].forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+}
+
+function setAll(v) {
+  document.querySelectorAll('#gameList .seg').forEach(seg => {
+    seg.dataset.value = String(v);
+    [...seg.children].forEach(b => b.setAttribute('aria-pressed', b.textContent === v + ':' + v ? 'true' : 'false'));
+  });
+}
+
+function adjacencyPairs(group, n) {
+  const s = new Set(group);
+  let pairs = 0;
+  group.forEach(i => { if (s.has((i + 1) % n)) pairs++; });
+  return group.length === n ? pairs - 1 : pairs;
+}
+
+function allIdx(n) { const a = []; for (let i = 0; i < n; i++) a.push(i); return a; }
+
+// constraints: [{player(0-idx), from, to, mode:'exclude'|'noKeeper'}]
+// prefix: 이미 확정된 게임들 (경기 도중 변동에서 재사용)
+function buildOnce(n, types, jitter, constraints, prefix) {
+  constraints = constraints || [];
+  prefix = prefix || [];
+  const rest = new Array(n).fill(0);
+  const gk = new Array(n).fill(0);
+  const eligible = new Array(n).fill(0);
+  let prevRest = new Set(), prevGk = new Set();
+  const games = [];
+
+  prefix.forEach(g => {
+    g.resting.forEach(i => rest[i]++);
+    g.gks.forEach(i => gk[i]++);
+    (g.available || allIdx(n)).forEach(i => eligible[i]++);
+    games.push(g);
+    prevRest = new Set(g.resting);
+    prevGk = new Set(g.gks);
+  });
+
+  for (let gi = prefix.length; gi < types.length; gi++) {
+    const gameNo = gi + 1;
+    const playCountBase = types[gi];
+    const excludedFull = new Set(
+      constraints.filter(c => c.mode === 'exclude' && gameNo >= c.from && gameNo <= c.to).map(c => c.player));
+    const excludedGk = new Set(
+      constraints.filter(c => c.mode === 'noKeeper' && gameNo >= c.from && gameNo <= c.to).map(c => c.player));
+
+    const available = [];
+    for (let i = 0; i < n; i++) if (!excludedFull.has(i)) available.push(i);
+    const avail = available.length;
+    const playCount = Math.min(playCountBase, avail);
+    const restCount = Math.max(0, avail - playCount);
+    const gkCount = Math.min(2, playCount);
+
+    const resting = [];
+    for (let k = 0; k < restCount; k++) {
+      let bestI = -1, bestS = Infinity;
+      const remainSlots = restCount - resting.length;
+      const remainCand = available.filter(x => !resting.includes(x));
+      const nonPrevCount = remainCand.filter(x => !prevRest.has(x)).length;
+      for (const i of remainCand) {
+        if (prevRest.has(i) && nonPrevCount >= remainSlots) continue;
+        const adj = resting.some(r => (r + 1) % n === i || (i + 1) % n === r) ? 1 : 0;
+        const ratio = eligible[i] ? rest[i] / eligible[i] : 0;
+        const s = ratio * 10000 + (prevGk.has(i) ? 400 : 0) - adj * 60 + Math.random() * jitter;
+        if (s < bestS) { bestS = s; bestI = i; }
+      }
+      if (bestI >= 0) resting.push(bestI);
+    }
+
+    const playing = available.filter(i => !resting.includes(i));
+
+    const gks = [];
+    const gkCandBase = playing.filter(i => !excludedGk.has(i));
+    const gkNoRepeat = gkCandBase.filter(i => !prevGk.has(i));
+    const gkPool = gkNoRepeat.length >= gkCount ? gkNoRepeat : (gkCandBase.length >= gkCount ? gkCandBase : playing);
+    for (let k = 0; k < gkCount; k++) {
+      let bestI = -1, bestS = Infinity;
+      for (const i of gkPool) {
+        if (gks.includes(i)) continue;
+        const adj = gks.some(g2 => (g2 + 1) % n === i || (i + 1) % n === g2) ? 1 : 0;
+        const ratio = eligible[i] ? gk[i] / eligible[i] : 0;
+        const s = ratio * 10000 + (prevRest.has(i) ? 400 : 0) - adj * 60 + Math.random() * jitter;
+        if (s < bestS) { bestS = s; bestI = i; }
+      }
+      if (bestI >= 0) gks.push(bestI);
+    }
+
+    resting.forEach(i => rest[i]++);
+    gks.forEach(i => gk[i]++);
+    available.forEach(i => eligible[i]++);
+    games.push({ playCount, resting, playing, gks, available, excluded: [...excludedFull] });
+    prevRest = new Set(resting);
+    prevGk = new Set(gks);
+  }
+  return { games, rest, gk, eligible };
+}
+
+var CONSTRAINTS = [];
+var CID = 1;
+var LAST = null;
+
+function addConstraint(formNo) {
+  const suffix = formNo === 2 ? '2' : '';
+  const player = parseInt(document.getElementById('csPlayer' + suffix).value);
+  const totalGames = parseInt(document.getElementById('numGames').value) || (LAST ? LAST.types.length : 9);
+  let from = parseInt(document.getElementById('csFrom' + suffix).value);
+  let to = parseInt(document.getElementById('csTo' + suffix).value);
+  const mode = document.getElementById('csType' + suffix).value;
+  if (!player || player < 1) { alert('선수 번호를 입력해 주세요.'); return; }
+  if (!from || from < 1) from = 1;
+  if (!to || to < 1) to = totalGames;
+  if (to < from) { alert('종료 경기가 시작 경기보다 빠를 수 없습니다.'); return; }
+  CONSTRAINTS.push({ id: CID++, player: player - 1, from, to, mode });
+  document.getElementById('csPlayer' + suffix).value = '';
+  document.getElementById('csFrom' + suffix).value = '';
+  document.getElementById('csTo' + suffix).value = '';
+  renderConstraints();
+}
+
+function removeConstraint(id) {
+  CONSTRAINTS = CONSTRAINTS.filter(c => c.id !== id);
+  renderConstraints();
+}
+
+function renderConstraints() {
+  const html = CONSTRAINTS.map(c =>
+    '<div class="constraint-row"><span class="tag">' + (c.player + 1) + '번</span>' +
+    '<span>' + c.from + '~' + c.to + '경기 · ' + (c.mode === 'exclude' ? '경기 열외' : '골키퍼 제외') + '</span>' +
+    '<button type="button" class="rm" onclick="removeConstraint(' + c.id + ')">삭제</button></div>'
+  ).join('');
+  document.querySelectorAll('.constraintListView').forEach(box => box.innerHTML = html);
+}
+
+function evaluate(res, n) {
+  const { games, rest, gk } = res;
+  const dev = arr => {
+    const m = arr.reduce((s, v) => s + v, 0) / arr.length;
+    return arr.reduce((s, v) => s + (v - m) * (v - m), 0);
+  };
+  let backToBack = 0, backToBackGk = 0, adjacentDuty = 0, clusters = 0;
+  for (let g = 0; g < games.length; g++) {
+    clusters += adjacencyPairs(games[g].resting, n) + adjacencyPairs(games[g].gks, n);
+    if (g === 0) continue;
+    const pR = new Set(games[g - 1].resting);
+    const pG = new Set(games[g - 1].gks);
+    games[g].resting.forEach(i => { if (pR.has(i)) backToBack++; });
+    games[g].gks.forEach(i => { if (pG.has(i)) backToBackGk++; });
+    games[g].gks.forEach(i => { if (pR.has(i)) adjacentDuty++; });
+    games[g].resting.forEach(i => { if (pG.has(i)) adjacentDuty++; });
+  }
+  const imbalance = dev(rest) + dev(gk);
+  const score = (backToBack + backToBackGk) * 1e7 + imbalance * 1e4 + adjacentDuty * 1e2 - clusters;
+  return { score, backToBack, backToBackGk, adjacentDuty, clusters, imbalance };
+}
+
+function buildShareText(n, games, rest, gk) {
+  const teamName = (document.getElementById('teamName').value || '').trim();
+  const lines = [];
+  lines.push((teamName ? teamName + '팀 ' : '') + '풋살 로테이션 (' + games.length + '경기)');
+  lines.push('');
+  games.forEach((g, i) => {
+    const field = g.playing.filter(p => !g.gks.includes(p)).slice().sort((a, b) => a - b).map(x => x + 1).join(',');
+    const gks = g.gks.slice().sort((a, b) => a - b).map(x => x + 1).join(',') || '-';
+    const resting = g.resting.slice().sort((a, b) => a - b).map(x => x + 1).join(',') || '없음';
+    const excluded = (g.excluded || []).slice().sort((a, b) => a - b).map(x => x + 1).join(',');
+    let line = (i + 1) + '경기 ' + g.playCount + ':' + g.playCount +
+      ' | 필드 ' + (field || '-') + ' | GK ' + gks + ' | 휴식 ' + resting;
+    if (excluded) line += ' | 제외 ' + excluded;
+    lines.push(line);
+  });
+  lines.push('');
+  lines.push('[번호별 누적]');
+  for (let i = 0; i < n; i++) {
+    const missed = games.filter(g => (g.excluded || []).includes(i)).length;
+    const played = games.length - rest[i] - missed;
+    let line = (i + 1) + '번 출전' + played + ' · GK' + gk[i] + ' · 휴식' + rest[i];
+    if (missed) line += ' · 열외' + missed;
+    lines.push(line);
+  }
+  return lines.join('\n');
+}
+
+function fallbackCopy(text, cb) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); cb(); } catch (e) { alert('복사에 실패했습니다. 직접 선택해 복사해 주세요.'); }
+  document.body.removeChild(ta);
+}
+
+function copyResultText() {
+  if (!LAST) return;
+  const text = buildShareText(LAST.n, LAST.result.games, LAST.result.rest, LAST.result.gk);
+  const btn = document.getElementById('copyBtn');
+  const done = () => {
+    const orig = btn.textContent;
+    btn.textContent = '복사됨 ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  } else {
+    fallbackCopy(text, done);
+  }
+}
+
+function run() {
+  const n = parseInt(document.getElementById('numPlayers').value);
+  const types = [...document.querySelectorAll('#gameList .seg')].map(s => parseInt(s.dataset.value));
+
+  if (!n || n < 2) { alert('참가 인원을 2명 이상 입력해 주세요.'); return; }
+  if (types.length === 0) { alert('경기 수를 먼저 적용해 주세요.'); return; }
+  const tooBig = types.find(t => t > n);
+  if (tooBig) { alert('참가 인원 ' + n + '명보다 큰 구장(' + tooBig + ':' + tooBig + ')이 있습니다.'); return; }
+
+  let best = null, bestEval = null;
+  const jitters = [0, 20, 60, 150, 400];
+  for (let round = 0; round < jitters.length; round++) {
+    const iters = round === 0 ? 1 : 3000;
+    for (let i = 0; i < iters; i++) {
+      const cand = buildOnce(n, types, jitters[round], CONSTRAINTS, []);
+      const ev = evaluate(cand, n);
+      if (!bestEval || ev.score < bestEval.score) { best = cand; bestEval = ev; }
+    }
+  }
+  LAST = { n, types, result: best, eval: bestEval };
+  render(best, bestEval, n);
+}
+
+function runContinue() {
+  if (!LAST) { alert('먼저 배치 계산을 눌러 주세요.'); return; }
+  const lockedCount = parseInt(document.getElementById('lockedCount').value);
+  if (isNaN(lockedCount) || lockedCount < 0 || lockedCount > LAST.types.length) {
+    alert('완료된 경기 수를 0~' + LAST.types.length + ' 사이로 입력해 주세요.');
+    return;
+  }
+  const prefix = LAST.result.games.slice(0, lockedCount);
+  const n = LAST.n, types = LAST.types;
+
+  let best = null, bestEval = null;
+  const jitters = [0, 20, 60, 150, 400];
+  for (let round = 0; round < jitters.length; round++) {
+    const iters = round === 0 ? 1 : 3000;
+    for (let i = 0; i < iters; i++) {
+      const cand = buildOnce(n, types, jitters[round], CONSTRAINTS, prefix);
+      const ev = evaluate(cand, n);
+      if (!bestEval || ev.score < bestEval.score) { best = cand; bestEval = ev; }
+    }
+  }
+  LAST = { n, types, result: best, eval: bestEval };
+  render(best, bestEval, n);
+}
+
+var ICON = {
+  ball: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="9"/><path d="M12 7.2l3.6 2.6-1.4 4.2h-4.4L8.4 9.8z"/>' +
+        '<path d="M12 3v4.2M19.6 9.8l-4 0M17.3 18.6l-3.1-4.6M6.7 18.6l3.1-4.6M4.4 9.8l4 0"/></svg>',
+  glove: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
+         '<path d="M8 21v-4.4L5.6 14a2 2 0 0 1 2.8-2.8l.6.6V5.5a1.5 1.5 0 0 1 3 0V10m0 0V4.5a1.5 1.5 0 0 1 3 0V10m0 0V6.5a1.5 1.5 0 0 1 3 0V16a5 5 0 0 1-1.5 3.6L18 21"/></svg>',
+  bench: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
+         '<path d="M3 11h18M4 11v8M20 11v8M3 15h18"/></svg>',
+  out: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">' +
+       '<circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>'
+};
+
+var JERSEY_PATH = 'M13 4 L18 4 C19 7.5 21 7.5 22 4 L27 4 L38 10 L34 19.5 L30 17.5 L30 37 L10 37 L10 17.5 L6 19.5 L2 10 Z';
+
+function jersey(i, cls) {
+  return '<span class="jersey ' + cls + '">' +
+    '<svg viewBox="0 0 40 40" role="img" aria-label="' + playerLabel(i) + '번">' +
+    '<path d="' + JERSEY_PATH + '"/>' +
+    '<text x="20" y="28" text-anchor="middle">' + playerLabel(i) + '</text>' +
+    '</svg></span>';
+}
+
+function discs(arr, cls) {
+  return '<div class="discs">' +
+    arr.slice().sort((a, b) => a - b).map(i => jersey(i, cls)).join('') +
+    '</div>';
+}
+
+function render(res, ev, n) {
+  const { games, rest, gk } = res;
+  const teamName = (document.getElementById('teamName').value || '').trim();
+  document.getElementById('scheduleTitle').textContent = teamName ? teamName + '팀 경기별 배치' : '경기별 배치';
+
+  let h = '';
+  games.forEach((g, i) => {
+    const field = g.playing.filter(p => !g.gks.includes(p));
+    const excluded = g.excluded || [];
+    h += '<div class="card">' +
+      '<div class="head">' +
+        '<div class="board"><div class="gnum">' + (i + 1) + '</div><div class="glabel">GAME</div></div>' +
+        '<div class="court">' + g.playCount + ':' + g.playCount + '</div>' +
+      '</div>' +
+      '<div class="zones">' +
+        '<div class="zone"><span class="zlabel">' + ICON.ball + '<span class="lbltxt">필드</span></span>' + discs(field, 'on') + '</div>' +
+        '<div class="zone keep"><span class="zlabel">' + ICON.glove + '<span class="lbltxt">골키퍼</span></span>' + discs(g.gks, 'keeper') + '</div>' +
+        (g.resting.length ? '<div class="zone"><span class="zlabel">' + ICON.bench + '<span class="lbltxt">휴식</span></span>' + discs(g.resting, 'off') + '</div>' : '') +
+        (excluded.length ? '<div class="zone"><span class="zlabel">' + ICON.out + '<span class="lbltxt">제외</span></span>' + discs(excluded, 'excluded') + '</div>' : '') +
+      '</div></div>';
+  });
+  document.getElementById('schedule').innerHTML = h;
+  document.getElementById('midSection').style.display = 'block';
+  const lc = document.getElementById('lockedCount');
+  if (!lc.value || parseInt(lc.value) > games.length) lc.value = games.length;
+
+  let s = '';
+  for (let i = 0; i < n; i++) {
+    const missed = games.filter(g => (g.excluded || []).includes(i)).length;
+    const played = games.length - rest[i] - missed;
+    s += '<div class="tally-row">' +
+      jersey(i, 'on') +
+      '<div class="bars">' +
+        '<span>출전<b>' + played + '</b></span>' +
+        '<span class="k">골키퍼<b>' + gk[i] + '</b></span>' +
+        '<span>휴식<b>' + rest[i] + '</b></span>' +
+        (missed ? '<span>열외<b>' + missed + '</b></span>' : '') +
+      '</div></div>';
+  }
+  document.getElementById('summary').innerHTML = s;
+  document.getElementById('summaryHint').textContent =
+    '골키퍼 ' + Math.min(...gk) + '~' + Math.max(...gk) + '회 · 휴식 ' + Math.min(...rest) + '~' + Math.max(...rest) + '회';
+
+  const restSpread = Math.max(...rest) - Math.min(...rest);
+  const gkSpread = Math.max(...gk) - Math.min(...gk);
+  const row = (ok, rank, txt) =>
+    '<div class="check ' + (ok ? 'pass' : 'fail') + '"><span class="mark">' + (ok ? '✓' : '✕') + '</span>' +
+    '<span class="rank">' + rank + '순위</span><span class="txt">' + txt + '</span></div>';
+
+  const p1 = ev.backToBack === 0 && ev.backToBackGk === 0;
+  document.getElementById('quality').innerHTML =
+    row(p1, 1, p1 ? '연달아 쉬거나 연달아 골키퍼를 맡는 사람 없음'
+                 : '연속 휴식 ' + ev.backToBack + '건, 연속 골키퍼 ' + ev.backToBackGk + '건') +
+    row(restSpread <= 1 && gkSpread <= 1, 2, '휴식 편차 ' + restSpread + '회, 골키퍼 편차 ' + gkSpread + '회') +
+    row(ev.adjacentDuty === 0, 3, ev.adjacentDuty === 0 ? '골키퍼와 휴식이 앞뒤로 붙은 경우 없음' : '인접 ' + ev.adjacentDuty + '건') +
+    '<div class="check pass"><span class="mark">·</span><span class="rank">4순위</span><span class="txt">등번호가 붙어서 배치된 묶음 ' + ev.clusters + '쌍</span></div>' +
+    '<p class="foot">1순위는 후보에서 아예 제외하는 방식이라 인원이 모자라지 않는 한 반드시 지켜집니다. ' +
+    '2순위 편차 1회는 총 배정 횟수가 인원수로 나누어떨어지지 않을 때 생기는 최소값입니다. ' +
+    '예를 들어 8명이 9경기를 뛰면 골키퍼 자리가 18개라 2회인 사람과 3회인 사람이 섞일 수밖에 없습니다. ' +
+    '3순위는 쉰 직후 골키퍼를 맡거나 골키퍼 직후 쉬는 경우를 뜻하고, 4순위는 5·6번처럼 붙은 번호끼리 같이 배정된 묶음 수입니다. ' +
+    '다시 계산을 눌러 다른 조합과 비교해 보세요.</p>';
+  const p1ok = ev.backToBack === 0 && ev.backToBackGk === 0;
+  const p2ok = restSpread <= 1 && gkSpread <= 1;
+  const p3ok = ev.adjacentDuty === 0;
+  const passed = [p1ok, p2ok, p3ok].filter(Boolean).length;
+  document.getElementById('qualityHint').textContent = '3개 중 ' + passed + '개 충족';
+
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+renderGames();
+renderConstraints();
+</script>
+<script>
+/* ===================== 풋살 경기 타이머 =====================
+   핵심 아이디어: 시작 버튼을 누르는 순간 경기 전체(준비 3초 + 전반 + 후반 + 막공)를
+   "무음 + 정해진 시점의 부저·휘슬"로 이어 붙인 오디오 한 개로 만들어 재생한다.
+   음악처럼 재생되므로 화면이 꺼지거나 다른 앱을 써도 정확한 시점에 소리가 난다.
+   화면 표시는 그 오디오의 재생 위치(currentTime)를 기준으로 계산한다. */
+(function () {
+  'use strict';
+
+  const PRE = 3.4;               // 준비 구간(앞 0.4초는 재생 시작 여유)
+  const BREAK = 15;              // 전반이 끝나고 시계를 멈춘 채 키퍼를 교체하는 시간(초)
+  const LAST = 30;               // 막공 시간(초): 시계는 계속 흐르고, 이후 경기 종료
+  const ALARM = 10;              // 키퍼 교체 몇 초 전에 알릴지
+  const HALVES = 2;              // 전반·후반
+  const LIMIT = { tMin: 30, tMax: 10 * 60, step: 10 };   // 30초~10분, 10초 단위
+  const KEY = 'futsalTimer.v1';
+
+  /* ---------- 설정: 전·후반 경기시간(초) ---------- */
+  // t: 전·후반 경기시간(초), cd: 3·2·1 카운트다운 소리, sv: 시작 알림(whistle | buzzer)
+  const cfg = { t: 300, cd: true, sv: 'whistle' };
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s && Number.isFinite(s.t)) cfg.t = Math.min(LIMIT.tMax, Math.max(LIMIT.tMin, Math.round(s.t / LIMIT.step) * LIMIT.step));
+    if (s && typeof s.cd === 'boolean') cfg.cd = s.cd;
+    if (s && (s.sv === 'whistle' || s.sv === 'buzzer')) cfg.sv = s.sv;
+  } catch (e) { /* 저장소를 못 쓰는 환경이면 기본값 사용 */ }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} }
+
+  const $ = id => document.getElementById(id);
+  const pad = n => String(n).padStart(2, '0');
+  const half = k => (k === 0 ? '전반' : '후반');
+  const mmss = s => pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+  const fmt = sec => mmss(Math.max(0, Math.ceil(sec - 1e-6)));   // 남은 시간(올림)
+  // k번째 하프가 시작되는 오디오 시점(사이마다 키퍼 교체 휴식 BREAK초)
+  const halfStart = (c, k) => PRE + k * (c.t + BREAK);
+  const fmtUp = sec => mmss(Math.max(0, Math.floor(sec + 1e-6))); // 경과 시간(내림)
+
+  /* ---------- 부저음 합성 ---------- */
+  // freqs: 동시에 울릴 주파수들(두 개를 살짝 어긋나게 겹치면 경기장 부저처럼 거친 소리)
+  function mixTone(buf, sr, t, dur, freqs, gain, maxH) {
+    const start = Math.round(t * sr), n = Math.round(dur * sr);
+    const parts = [];
+    for (const f of freqs) for (let h = 1; f * h < sr * 0.45 && h <= (maxH || 99); h += 2) parts.push([2 * Math.PI * f * h / sr, 1 / h]);
+    const norm = parts.reduce((s, p) => s + p[1], 0);
+    const atk = 0.005 * sr, rel = 0.04 * sr;
+    for (let i = 0; i < n; i++) {
+      const j = start + i; if (j < 0 || j >= buf.length) continue;
+      const env = Math.min(1, i / atk, (n - i) / rel);
+      let v = 0; for (const p of parts) v += Math.sin(p[0] * i) * p[1];
+      buf[j] += gain * env * v / norm;
+    }
+  }
+  // 심판 호루라기: 2.8kHz 근처 고음 + 안에 든 구슬이 만드는 빠른 떨림(약 30Hz) + 숨소리
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
+  function mixWhistle(buf, sr, t, dur, gain) {
+    const start = Math.round(t * sr), n = Math.round(dur * sr);
+    const f0 = 2850, dev = 220, trill = 31, atk = 0.02 * sr, rel = 0.06 * sr;
+    let ph = 0, lp = 0;
+    for (let i = 0; i < n; i++) {
+      const j = start + i; if (j < 0 || j >= buf.length) continue;
+      const tt = i / sr;
+      const rise = Math.min(1, tt / 0.04);                      // 불기 시작할 때 음이 살짝 올라감
+      const wob = Math.sin(2 * Math.PI * trill * tt);
+      const f = f0 * (0.93 + 0.07 * rise) + dev * wob;
+      ph += 2 * Math.PI * f / sr;
+      let v = Math.sin(ph) * (0.78 + 0.22 * wob);
+      if (2 * f < sr * 0.45) v += 0.18 * Math.sin(2 * ph);
+      lp += 0.35 * (rnd() - lp); v += 0.12 * lp;                  // 숨소리
+      const env = Math.min(1, i / atk, (n - i) / rel);
+      buf[j] += gain * env * v;
+    }
+  }
+  // 알림음 한 번 불기: 설정의 휘슬 또는 부저음
+  function blow(b, sr, t, dur, sv) {
+    if (sv === 'buzzer') mixTone(b, sr, t, dur + 0.05, [1760], 0.6, 3);
+    else mixWhistle(b, sr, t, dur, 0.8);
+  }
+  const SND = {
+    tick:  (b, sr, t) => mixTone(b, sr, t, 0.16, [880], 0.6, 7),                 // 삑 (3·2·1)
+    warn:  (b, sr, t) => [0, 0.14, 0.5, 0.64].forEach(d => mixTone(b, sr, t + d, 0.09, [1318], 0.55, 5)), // 삐빅 삐빅 (교체 10초 전)
+    start: (b, sr, t, sv) => blow(b, sr, t, 0.9, sv),                            // 1번: 삐익~ (경기 시작)
+    gk:    (b, sr, t, sv) => { blow(b, sr, t, 0.32, sv); blow(b, sr, t + 0.5, 0.32, sv); },   // 2번: 삑- 삑- (키퍼 교체)
+    end:   (b, sr, t, sv) => { blow(b, sr, t, 0.3, sv); blow(b, sr, t + 0.45, 0.3, sv); blow(b, sr, t + 0.9, 1.3, sv); } // 3번: 삑 삑 삐이익 (경기 종료)
+  };
+
+  // 타임라인: 시점별로 낼 소리 목록
+  function timeline(c) {
+    const ev = [], sv = c.sv;
+    const countdown = (t0, s) => { if (c.cd !== false) [3, 2, 1].forEach(k => ev.push({ t: t0 - k, s: 'tick' })); ev.push({ t: t0, s, sv }); };
+    countdown(halfStart(c, 0), 'start');                    // (삑 삑 삑) + 알림음 1번 (전반 시작)
+    for (let k = 1; k < c.r; k++) {
+      const he = halfStart(c, k - 1) + c.t;                 // 전반 끝 = 키퍼 교체 휴식 시작(시계 멈춤)
+      if (c.a > 0 && c.a < c.t) ev.push({ t: he - c.a, s: 'warn' });
+      ev.push({ t: he, s: 'gk', sv });                      // 알림음 2번 (키퍼 교체)
+      // 휴식 15초가 끝나면 소리 없이 그대로 후반 시작
+    }
+    const end = halfStart(c, c.r - 1) + c.t;
+    countdown(end, 'end');                                  // (삑 삑 삑) + 알림음 3번 (경기 종료·막공)
+    return { ev, total: end + LAST };
+  }
+
+  function renderWav(tl) {
+    const sr = tl.total <= 20 * 60 ? 16000 : tl.total <= 40 * 60 ? 11025 : 8000;
+    const n = Math.ceil(tl.total * sr), buf = new Float32Array(n);
+    for (const e of tl.ev) SND[e.s](buf, sr, e.t, e.sv);
+    let peak = 0; for (let i = 0; i < n; i++) { const a = Math.abs(buf[i]); if (a > peak) peak = a; }
+    const amp = peak > 0 ? 0.97 / peak : 1;   // 경기장에서 잘 들리도록 최대 음량으로
+    for (let i = 0; i < n; i++) buf[i] *= amp;
+    const ab = new ArrayBuffer(44 + n * 2), dv = new DataView(ab);
+    const str = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+    str(0, 'RIFF'); dv.setUint32(4, 36 + n * 2, true); str(8, 'WAVE'); str(12, 'fmt ');
+    dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+    dv.setUint32(24, sr, true); dv.setUint32(28, sr * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
+    str(36, 'data'); dv.setUint32(40, n * 2, true);
+    const pcm = new Int16Array(ab, 44, n);
+    for (let i = 0; i < n; i++) { const v = buf[i]; pcm[i] = v >= 1 ? 32767 : v <= -1 ? -32768 : v * 32767; }
+    return URL.createObjectURL(new Blob([ab], { type: 'audio/wav' }));
+  }
+
+  /* ---------- 재생 상태 ---------- */
+  const audio = new Audio();
+  audio.preload = 'auto';
+  audio.setAttribute('playsinline', '');
+  let state = 'idle';           // idle | running | paused | done
+  let run = null;               // 시작할 때의 설정 사본
+  let url = null, raf = 0, wake = null;
+
+  function setUrl(u) { if (url) URL.revokeObjectURL(url); url = u; audio.src = u || ''; }
+
+  function start() {
+    run = { t: cfg.t, a: ALARM < cfg.t ? ALARM : 0, r: HALVES, cd: cfg.cd, sv: cfg.sv };
+    setUrl(renderWav(timeline(run)));
+    audio.currentTime = 0;
+    const p = audio.play();
+    if (p && p.catch) p.catch(() => { toast('소리를 켜지 못했습니다. 다시 눌러 주세요.'); stop(); });
+    state = 'running'; afterChange();
+  }
+  function pause() { audio.pause(); state = 'paused'; afterChange(); }
+  function resume() { audio.play(); state = 'running'; afterChange(); }
+  function stop() { audio.pause(); setUrl(null); state = 'idle'; run = null; if (typeof closePip === 'function') closePip(); afterChange(); }
+
+  audio.addEventListener('ended', () => { if (state === 'running') { state = 'done'; afterChange(); setTimeout(() => closePip(), 4000); } });
+  audio.addEventListener('pause', () => { if (state === 'running' && !audio.ended) { state = 'paused'; afterChange(); } });
+  audio.addEventListener('play', () => { if (state === 'paused') { state = 'running'; afterChange(); } });
+  audio.addEventListener('seeked', () => { last = ''; draw(); });   // 잠금화면에서 위치를 옮겨도 화면 갱신
+
+  function afterChange() {
+    cancelAnimationFrame(raf);
+    document.body.classList.toggle('tm-running', state !== 'idle');
+    if (state === 'running') loop(); else draw();
+    if (state === 'running') keepAwake(); else releaseAwake();
+    media();
+    requestAnimationFrame(() => { last = ''; fitKey = ''; draw(); });
+  }
+  function loop() { draw(); raf = requestAnimationFrame(loop); }
+
+  /* ---------- 화면 그리기 ---------- */
+  const el = {
+    root: $('view-timer'), main: $('tmMain'), setup: $('tmSetup'), runBox: $('tmRun'), label: $('tmLabel'), chip: $('tmChip'), sub: $('tmSub'),
+    time: $('tmTime'), halfK: $('tmHalfK'), half: $('tmHalf'), total: $('tmTotal'),
+    head: $('tmHead'), statL: $('tmStatL'), statR: $('tmStatR'), gear: $('tmGear'),
+    stop: $('tmStop'), restart: $('tmRestart'), endBtn: $('tmEndBtn'), play: $('tmPlay'), icoPlay: $('tmIcoPlay'), icoPause: $('tmIcoPause')
+  };
+  let last = '', fitKey = '';
+  let mini = { phase: 'idle', label: '', time: '', small: '' };
+  function set(node, prop, v) { if (node[prop] !== v) node[prop] = v; }
+
+  function draw() {
+    const c = run || { t: cfg.t, a: ALARM, r: HALVES }, G = c.t * c.r;
+    let phase = 'idle', label = '', chip = '', sub = '', time = '', word = false;
+    let halfK = '전반 남은 시간', halfLeft = c.t, totalLeft = G;
+
+    if (state !== 'idle') {
+      const t = audio.currentTime || 0, end = halfStart(c, c.r - 1) + c.t;
+      if (t < PRE && state !== 'done') {
+        phase = 'ready'; label = '준비'; time = String(Math.max(1, Math.min(3, Math.ceil(PRE - t))));
+      } else if (t < end && state !== 'done') {
+        let k = 0; while (k < c.r - 1 && t >= halfStart(c, k) + c.t) k++;
+        const hs = halfStart(c, k);
+        if (t < hs) {
+          // 키퍼 교체 휴식: 시계 멈춤, 끝나면 그대로 후반으로 이어짐
+          phase = 'gk'; label = '키퍼 교체'; time = fmtUp(k * c.t); sub = '(' + fmt(hs - t) + ')';   // 키퍼 교체 남은 시간
+          halfK = half(k) + ' 남은 시간'; halfLeft = c.t; totalLeft = G - k * c.t;
+        } else {
+          const inHalf = t - hs, left = c.t - inHalf, e = k * c.t + inHalf;
+          halfK = half(k) + ' 남은 시간'; halfLeft = left; totalLeft = G - e;
+          time = fmtUp(e); phase = 'play'; label = half(k);                      // 경과 시간(후반은 이어서)
+          if (k < c.r - 1 && c.a > 0 && left <= c.a) { phase = 'alarm'; label = '키퍼 교체 준비'; }
+        }
+      } else {
+        halfK = '후반 남은 시간'; halfLeft = 0; totalLeft = 0;
+        if (state === 'done') { phase = 'done'; word = true; time = el.main.clientWidth < el.main.clientHeight ? '경기\n종료' : '경기 종료'; }   // 종료 화면은 '경기 종료'만 크게
+        else { phase = 'last'; label = '막공!'; time = fmtUp(G + Math.min(LAST, t - end)); }  // 막공 동안에도 시계는 계속
+      }
+      if (state === 'paused') chip = '일시정지';
+    }
+
+    const key = [state, phase, label, chip, sub, time, halfK, fmt(halfLeft), fmt(totalLeft)].join('|');
+    if (key === last) return; last = key;
+
+    el.root.dataset.phase = phase;
+    const running = state !== 'idle';
+    el.setup.hidden = running; el.runBox.hidden = !running;
+    el.head.hidden = !running; el.stop.hidden = !running;
+    el.statL.hidden = !running; el.statR.hidden = !running; el.gear.hidden = running;
+    if (!running) disarm();
+    set(el.label, 'textContent', label); set(el.chip, 'textContent', chip); set(el.sub, 'textContent', sub);
+    set(el.time, 'textContent', time); el.time.classList.toggle('word', word);
+    set(el.halfK, 'textContent', halfK); set(el.half, 'textContent', fmt(halfLeft)); set(el.total, 'textContent', fmt(totalLeft));
+    // 작은 화면(PiP)·좁은 창에서 쓰는 요약: 단계 이름 + 경과 시간 + 경기 남은 시간
+    mini = { phase, label: phase === 'done' ? '경기 종료' : (sub ? label + ' ' + sub : label), time: phase === 'done' ? fmtUp(G + LAST) : time, small: '경기 남은 시간 ' + fmt(totalLeft) };   // 전체 경기 남은 시간
+    set($('tmMini'), 'textContent', mini.small);
+    $('tmPip').hidden = !(pipOK && (state === 'running' || state === 'paused') && phase !== 'done');
+    syncNative((state === 'running' || state === 'paused') && phase !== 'done');
+    drawPip();
+    const playing = state === 'running';
+    const restart = state === 'done', finish = phase === 'last';   // 막공 중엔 ■ 경기 종료
+    el.icoPlay.toggleAttribute('hidden', playing || restart || finish); el.icoPause.toggleAttribute('hidden', !playing || finish);
+    el.restart.hidden = !restart; el.endBtn.hidden = !finish; el.play.classList.toggle('restart', restart || finish);
+    el.play.setAttribute('aria-label', restart ? '다시 시작' : finish ? '경기 종료' : playing ? '일시정지' : state === 'paused' ? '계속' : '시작');
+    if (running) fitTime(time.length + (word ? 'w' : 'n') + (sub ? 's' : ''));
+  }
+
+  // 큰 숫자를 패널 폭·높이에 꽉 차게 맞춘다(전광판). 글자 수가 바뀔 때만 다시 계산.
+  function fitTime(k) {
+    const box = el.runBox, w = box.clientWidth - 16, h = box.clientHeight;
+    if (!w || !h) return;
+    k += '|' + w + 'x' + h;
+    if (k === fitKey) return; fitKey = k;
+    const used = el.label.offsetHeight + el.chip.offsetHeight + el.sub.offsetHeight + $('tmMini').offsetHeight + 24;
+    el.time.style.fontSize = '100px';
+    const tw = el.time.scrollWidth || 1;
+    const lines = el.time.textContent.split('\n').length;
+    const size = Math.max(60, Math.min(w / tw * 100 * 0.97, (h - used) / (lines > 1 ? 1.02 * lines : 0.9)));
+    el.time.style.fontSize = Math.floor(size) + 'px';
+  }
+  window.addEventListener('resize', () => { fitKey = ''; last = ''; draw(); if (state === 'idle') { wheelM.refit(); wheelS.refit(); } });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { fitKey = ''; last = ''; draw(); if (state === 'idle') { wheelM.refit(); wheelS.refit(); } });
+
+  /* ---------- 갤럭시 시계식 스크롤 휠 ---------- */
+  const CYCLES = 7;
+  function makeWheel(node, n, step, getV, setV) {
+    const mid = Math.floor(CYCLES / 2);
+    let h = '<div class="sp"></div>';
+    for (let c = 0; c < CYCLES; c++) for (let v = 0; v < n; v++) h += '<div class="it" data-i="' + (c * n + v) + '">' + pad(v * step) + '</div>';
+    node.innerHTML = h + '<div class="sp"></div>';
+    const items = node.querySelectorAll('.it');
+    let cur = -1, settleT = 0, ticking = false, user = false, touching = false, lastH = 0;   // user: 사람이 직접 돌릴 때만 값 변경
+    const H = () => (items[0] && items[0].offsetHeight) || 100;
+    const idx = () => Math.round(node.scrollTop / H());
+    function mark() {
+      ticking = false;
+      const i = idx();
+      if (i === cur) return;
+      if (cur >= 0 && items[cur]) items[cur].classList.remove('on');
+      if (items[i]) items[i].classList.add('on');
+      cur = i;
+      try { if (navigator.vibrate) navigator.vibrate(4); } catch (e) {}
+    }
+    function settle() {
+      if (touching) { clearTimeout(settleT); settleT = setTimeout(settle, 140); return; }  // 손가락을 대고 있는 동안은 확정하지 않음
+      if (!user || state !== 'idle' || !node.offsetParent) { mark(); return; }   // 화면 전환 때 생긴 스크롤은 무시
+      user = false;
+      const i = idx(), v = ((i % n) + n) % n;
+      setV(v);
+      // 가운데 묶음으로 몰래 되돌려 끝없이 돌아가게
+      const want = mid * n + v;
+      if (i !== want) { node.scrollTop = want * H(); }
+      sync(false);
+    }
+    function sync(smooth) {
+      lastH = H();
+      const want = mid * n + getV();
+      if (smooth) node.scrollTo({ top: want * H(), behavior: 'smooth' }); else node.scrollTop = want * H();
+      node.setAttribute('aria-valuenow', String(getV() * step)); node.setAttribute('aria-valuetext', pad(getV() * step));
+      mark();
+    }
+    ['pointerdown', 'touchstart', 'wheel', 'keydown'].forEach(ev => node.addEventListener(ev, () => { user = true; }, { passive: true }));
+    node.addEventListener('touchstart', () => { touching = true; }, { passive: true });
+    ['touchend', 'touchcancel'].forEach(ev => node.addEventListener(ev, () => { touching = false; }, { passive: true }));
+    // 화면 크기가 바뀌어도(주소창 접힘 등) 칸 높이가 그대로면 돌리던 휠을 건드리지 않음
+    function refit() { if (!user && !touching && H() !== lastH) sync(false); }
+    node.addEventListener('scroll', () => {
+      if (!ticking) { ticking = true; requestAnimationFrame(mark); }
+      clearTimeout(settleT); settleT = setTimeout(settle, 140);
+    }, { passive: true });
+    node.addEventListener('click', e => {
+      const it = e.target.closest('.it'); if (!it) return;
+      node.scrollTo({ top: +it.dataset.i * H(), behavior: 'smooth' });
+    });
+    node.addEventListener('keydown', e => {
+      const d = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0;
+      if (!d) return; e.preventDefault();
+      node.scrollTo({ top: (idx() + d) * H(), behavior: 'smooth' });
+    });
+    return { sync, refit };
+  }
+  function applyLimits() {
+    cfg.t = Math.min(LIMIT.tMax, Math.max(LIMIT.tMin, cfg.t));
+    save(); last = ''; draw();
+  }
+  // 분: 00~10, 초: 00·10·20·30·40·50
+  const MAXM = LIMIT.tMax / 60;
+  const wheelM = makeWheel($('tmWheelM'), MAXM + 1, 1, () => Math.floor(cfg.t / 60), v => {
+    const before = cfg.t; cfg.t = v * 60 + (v >= MAXM ? 0 : cfg.t % 60); applyLimits();
+    if (cfg.t !== before && cfg.t % 60 !== before % 60) wheelS.sync(true);
+  });
+  const wheelS = makeWheel($('tmWheelS'), 60 / LIMIT.step, LIMIT.step, () => (cfg.t % 60) / LIMIT.step, v => {
+    const before = cfg.t; cfg.t = Math.floor(cfg.t / 60) * 60 + v * LIMIT.step; applyLimits();
+    if (cfg.t % 60 !== v * LIMIT.step) wheelS.sync(true);   // 10분이면 00초, 0분이면 30초 이상으로 맞춤
+    if (Math.floor(cfg.t / 60) !== Math.floor(before / 60)) wheelM.sync(true);
+  });
+  function syncWheels() { if (state === 'idle') { wheelM.sync(false); wheelS.sync(false); } }
+
+  /* ---------- 화면 꺼짐 방지 · 잠금화면 컨트롤 ---------- */
+  async function keepAwake() {
+    try { if ('wakeLock' in navigator && !wake && document.visibilityState === 'visible') { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } } catch (e) {}
+  }
+  function releaseAwake() { try { if (wake) wake.release(); } catch (e) {} wake = null; }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') { last = ''; if (state === 'running') { keepAwake(); cancelAnimationFrame(raf); loop(); } else draw(); }
+  });
+  function media() {
+    if (!('mediaSession' in navigator)) return;
+    try {
+      if (state === 'idle') { navigator.mediaSession.metadata = null; return; }
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: 'G풋살 경기 타이머', artist: '전·후반 ' + mmss((run || cfg).t),
+        artwork: [{ src: 'icon-512.png', sizes: '512x512', type: 'image/png' }]
+      });
+      navigator.mediaSession.setActionHandler('play', () => { if (state === 'paused') resume(); });
+      navigator.mediaSession.setActionHandler('pause', () => { if (state === 'running') pause(); });
+    } catch (e) {}
+  }
+
+  /* ---------- 작은 화면(Picture-in-Picture) ----------
+     타이머가 작동 중일 때만 버튼이 보인다. 화면 그림을 동영상으로 만들어 휴대폰의 '작은 창'으로 띄우므로
+     다른 앱을 써도 위에 떠 있다. 소리는 기존 경기 오디오가 그대로 담당한다. */
+  // 안드로이드 앱(WebView)에서는 휴대폰 기본 '화면 속 화면'을 직접 사용
+  const NATIVE = window.FutsalApp || null;
+  let nativeActive = null;
+  function syncNative(active) {
+    if (!NATIVE || active === nativeActive) return;
+    nativeActive = active;
+    try { NATIVE.setRunning(!!active); } catch (e) {}
+  }
+  const pipOK = !!NATIVE || !!(document.pictureInPictureEnabled || (window.HTMLVideoElement && 'webkitSetPresentationMode' in HTMLVideoElement.prototype))
+    && !!(window.HTMLCanvasElement && HTMLCanvasElement.prototype.captureStream);
+  let pipCanvas = null, pipCtx = null, pipVideo = null, pipTick = 0;
+  const PIP_BG = { ready: '#FEFF65', play: '#B0FC66', alarm: '#FEFF65', gk: '#FEFF65', last: '#DE4837', done: '#FEFF65', idle: '#FEFF65' };
+  function drawPip() {
+    if (!pipCtx) return;
+    const W = pipCanvas.width, H = pipCanvas.height, ctx = pipCtx, m = mini;
+    const fg = m.phase === 'last' ? '#FFFFFF' : '#000000';
+    ctx.fillStyle = PIP_BG[m.phase] || '#B0FC66'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '900 38px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif'; ctx.fillText(m.label || '', W / 2, 52);
+    let fs = 150; ctx.font = '800 ' + fs + 'px "Barlow Condensed", "Noto Sans KR", sans-serif';
+    const tw = ctx.measureText(m.time || '').width; if (tw > W * 0.92) { fs = Math.floor(fs * W * 0.92 / tw); ctx.font = '800 ' + fs + 'px "Barlow Condensed", "Noto Sans KR", sans-serif'; }
+    ctx.fillText(m.time || '', W / 2, 160);
+    ctx.globalAlpha = 0.75; ctx.font = '700 28px "Noto Sans KR", "Apple SD Gothic Neo", sans-serif'; ctx.fillText(m.small || '', W / 2, 262); ctx.globalAlpha = 1;
+  }
+  async function openPip() {
+    if (NATIVE) { try { NATIVE.enterPip(); } catch (e) {} return; }
+    try {
+      if (!pipCanvas) { pipCanvas = document.createElement('canvas'); pipCanvas.width = 480; pipCanvas.height = 300; pipCtx = pipCanvas.getContext('2d'); }
+      drawPip();
+      if (!pipVideo) {
+        pipVideo = document.createElement('video');
+        pipVideo.muted = true; pipVideo.playsInline = true; pipVideo.setAttribute('playsinline', ''); pipVideo.className = 'tm-pip-video';
+        pipVideo.srcObject = pipCanvas.captureStream();
+        document.body.appendChild(pipVideo);
+        pipVideo.addEventListener('leavepictureinpicture', closePipLoop);
+        pipVideo.addEventListener('webkitpresentationmodechanged', () => { if (pipVideo.webkitPresentationMode !== 'picture-in-picture') closePipLoop(); });
+      }
+      await pipVideo.play();
+      if (pipVideo.readyState < 1) await new Promise(r => pipVideo.addEventListener('loadedmetadata', r, { once: true }));
+      clearInterval(pipTick); pipTick = setInterval(() => { last = ''; draw(); }, 250);   // 화면이 가려져도 1초에 한 번 이상 갱신
+      if (pipVideo.requestPictureInPicture) await pipVideo.requestPictureInPicture();
+      else pipVideo.webkitSetPresentationMode('picture-in-picture');
+    } catch (e) { toast('이 휴대폰에서는 작은 화면을 띄울 수 없습니다.'); closePipLoop(); }
+  }
+  function closePipLoop() { clearInterval(pipTick); pipTick = 0; }
+  function closePip() {
+    closePipLoop();
+    try { if (document.pictureInPictureElement) document.exitPictureInPicture(); } catch (e) {}
+    try { if (pipVideo && pipVideo.webkitPresentationMode === 'picture-in-picture') pipVideo.webkitSetPresentationMode('inline'); } catch (e) {}
+  }
+  audio.addEventListener('timeupdate', () => { if (pipTick) { last = ''; draw(); } });   // 백그라운드에서도 오디오 진행에 맞춰 갱신
+  $('tmPip').addEventListener('click', openPip);
+
+  /* ---------- 버튼 ---------- */
+  el.play.addEventListener('click', () => {
+    if (el.root.dataset.phase === 'last' || state === 'done') { stop(); requestAnimationFrame(() => syncWheels()); return; }  // 경기 종료·다시 시작: 첫 화면으로
+    if (state === 'running') pause();
+    else if (state === 'paused') resume();
+    else if (state === 'done') { stop(); requestAnimationFrame(() => syncWheels()); }   // 다시 시작: 첫 화면으로
+    else start();
+  });
+  // 경기 중 X는 실수 방지를 위해 두 번 눌러야 정지(3초 안에 한 번 더)
+  let armTimer = 0;
+  function disarm() { clearTimeout(armTimer); el.stop.classList.remove('armed'); el.stop.setAttribute('aria-label', '정지하고 처음으로'); }
+  el.stop.addEventListener('click', () => {
+    if (state === 'running' && !el.stop.classList.contains('armed')) {
+      el.stop.classList.add('armed'); el.stop.setAttribute('aria-label', '한 번 더 누르면 정지');
+      armTimer = setTimeout(disarm, 3000);
+      return;
+    }
+    disarm(); stop();
+    requestAnimationFrame(() => syncWheels());
+  });
+
+  /* ---------- 설정 시트 ---------- */
+  const sheet = $('tmSheet'), swCd = $('tmCd');
+  const sample = new Audio(); sample.setAttribute('playsinline', '');
+  let sampleUrl = null, lastFocus = null;
+  function paintSettings() {
+    swCd.setAttribute('aria-checked', String(cfg.cd));
+    sheet.querySelectorAll('[data-sv]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.sv === cfg.sv)));
+  }
+  function playSample(sv) {
+    try {
+      if (sampleUrl) URL.revokeObjectURL(sampleUrl);
+      // 경기 시작 때처럼 한 번만 들려준다
+      sampleUrl = renderWav({ ev: [{ t: 0.1, s: 'start', sv }], total: 1.15 });
+      sample.src = sampleUrl; sample.currentTime = 0; sample.play().catch(() => {});
+    } catch (e) {}
+  }
+  function openSheet() { lastFocus = document.activeElement; paintSettings(); sheet.hidden = false; swCd.focus(); }
+  function closeSheet() { sheet.hidden = true; sample.pause(); if (lastFocus) lastFocus.focus(); }
+  el.gear.addEventListener('click', openSheet);
+  sheet.addEventListener('click', e => {
+    if (e.target.closest('[data-close]')) { closeSheet(); return; }
+    if (e.target.closest('#tmCd')) { cfg.cd = !cfg.cd; save(); paintSettings(); return; }
+    const b = e.target.closest('[data-sv]');
+    if (b) { cfg.sv = b.dataset.sv; save(); paintSettings(); playSample(cfg.sv); }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && !sheet.hidden) closeSheet(); });
+
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('tmToast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+  }
+
+  /* ---------- 탭 ---------- */
+  function appbarHeight() {
+    const a = document.querySelector('.appbar');
+    if (a && a.offsetHeight) document.documentElement.style.setProperty('--app-h', a.offsetHeight + 'px');
+  }
+  function showView() {
+    const rot = location.hash === '#rotation';
+    $('view-timer').hidden = rot; $('view-rotation').hidden = !rot;
+    $('tabTimer').setAttribute('aria-selected', String(!rot));
+    $('tabRotation').setAttribute('aria-selected', String(rot));
+    document.body.classList.toggle('on-rotation', rot);
+    document.title = rot ? 'G풋살 · 로테이션 구성' : 'G풋살 · 경기 타이머';
+    if (!rot) { appbarHeight(); last = ''; fitKey = ''; draw(); requestAnimationFrame(() => syncWheels()); }
+  }
+  document.querySelectorAll('.appbar .tab').forEach(b => b.addEventListener('click', () => {
+    const h = b.dataset.view === 'rotation' ? '#rotation' : '#timer';
+    if (location.hash !== h) history.replaceState(null, '', h);
+    showView(); window.scrollTo(0, 0);
+  }));
+  window.addEventListener('hashchange', showView);
+  window.addEventListener('resize', appbarHeight);
+
+  showView(); draw();
+
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  }
+
+  // 검증용 훅
+  window.__tm = { timeline: () => timeline({ t: cfg.t, a: ALARM, r: HALVES, cd: cfg.cd, sv: cfg.sv }), cfg, PRE, audio,
+    pipShot: () => { if (!pipCanvas) { pipCanvas = document.createElement('canvas'); pipCanvas.width = 480; pipCanvas.height = 300; pipCtx = pipCanvas.getContext('2d'); } last = ''; draw(); drawPip(); return pipCanvas.toDataURL(); } };
+})();
+
+/* ---------- 안드로이드 앱 업데이트 알림 ----------
+   안드로이드 앱(APK) 안에서만: GitHub의 최신 릴리스 번호가 설치된 앱보다 높으면 상단에 '새 버전' 안내.
+   타이머가 돌고 있을 때는 띄우지 않음. 닫으면 그 버전에 대해서는 다시 띄우지 않음. */
+(function () {
+  const app = window.FutsalApp;
+  if (!app || typeof app.version !== 'function') return;
+  const APK = 'https://github.com/walkerkein/futsal/releases/latest/download/futsal-helper.apk';
+  const SKIP = 'futsalUpdate.skip';
+  let mine = 0; try { mine = Number(app.version()) || 0; } catch (e) { return; }
+  if (!mine) return;
+  fetch('https://api.github.com/repos/walkerkein/futsal/releases/latest', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      const m = j && /(\d+)$/.exec(j.tag_name || ''); const latest = m ? Number(m[1]) : 0;
+      if (latest <= mine) return;
+      try { if (localStorage.getItem(SKIP) === String(latest)) return; } catch (e) {}
+      const show = () => {
+        if (document.body.classList.contains('tm-running')) { setTimeout(show, 5000); return; }
+        const bar = document.createElement('div');
+        bar.className = 'upd'; bar.setAttribute('role', 'status');
+        bar.innerHTML = '<span>새 버전이 있습니다</span><a class="upd-go" href="' + APK + '">받기</a><button class="upd-x" aria-label="닫기">✕</button>';
+        bar.querySelector('.upd-x').onclick = () => { try { localStorage.setItem(SKIP, String(latest)); } catch (e) {} bar.remove(); };
+        bar.querySelector('.upd-go').onclick = () => setTimeout(() => bar.remove(), 300);
+        document.body.prepend(bar);
+      };
+      show();
+    })
+    .catch(() => {});
+})();
+</script>
+<script>
+/* ===================== 풋살 로테이션 구성: 채팅식 문답 =====================
+   질문과 답이 말풍선으로 위에서 아래로 쌓인다. 내가 한 답(노란 말풍선)을 누르면 그 질문부터 다시 고를 수 있다.
+   답을 모은 뒤에는 기존 계산기(run/render)를 그대로 써서 경기별 배치를 보여준다. */
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const thread = $('rcThread');
+  const SAVE_KEY = 'futsalRotation.last';
+  const VESTS = [
+    { k: '빨강', c: '#FF2D2D' }, { k: '파랑', c: '#1F5BFF' }, { k: '노랑', c: '#FEFF65' },
+    { k: '검정', c: '#111111' }, { k: '핑크', c: '#FF5FB4' }, { k: '그린', c: '#2BD45B' }
+  ];
+  const STEPS = ['start', 'vest', 'n', 'games', 'per', 'special', 'done'];
+
+  // 답 모음
+  let A = freshAnswers();
+  function freshAnswers() { return { vest: '', n: 0, games: 9, per: '', types: [], special: null, cons: [] }; }
+
+  function loadSaved() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (e) { return null; } }
+  function save() {
+    try {
+      if (!window.LAST) return;
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        a: A, last: LAST, cons: CONSTRAINTS, savedAt: Date.now()
+      }));
+    } catch (e) {}
+  }
+
+  /* ---------- 말풍선 ---------- */
+  const esc = s => String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+  // 카카오톡처럼: 왼쪽 프로필+이름+흰 말풍선, 오른쪽 노란 말풍선, 말풍선 옆 작은 시각
+  const AV = '<div class="kt-av" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7.2l3.6 2.6-1.4 4.2h-4.4L8.4 9.8z"/><path d="M12 3v4.2M19.6 9.8h-4M17.3 18.6l-3.1-4.6M6.7 18.6l3.1-4.6M4.4 9.8h4"/></svg></div>';
+  const nowText = () => { const d = new Date(), h = d.getHours(), m = String(d.getMinutes()).padStart(2, '0'); return (h < 12 ? '오전 ' : '오후 ') + (h % 12 || 12) + ':' + m; };
+  function bot(html) {
+    const row = document.createElement('div'); row.className = 'kt-row bot';
+    row.innerHTML = AV + '<div class="kt-col"><div class="kt-name">풋살 매니저</div><div class="kt-line"><div class="bub bot"></div><span class="kt-time">' + nowText() + '</span></div></div>';
+    const d = row.querySelector('.bub'); d.innerHTML = html; thread.appendChild(row); return d;
+  }
+  function me(text, step) {
+    const row = document.createElement('div'); row.className = 'kt-row me';
+    row.innerHTML = '<span class="kt-time">' + nowText() + '</span>';
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'bub me';
+    b.innerHTML = esc(text) + '<span class="edit" aria-hidden="true">수정</span>';
+    b.setAttribute('aria-label', text + ' (눌러서 다시 고르기)');
+    b.addEventListener('click', () => goTo(STEPS.indexOf(step)));
+    row.appendChild(b); thread.appendChild(row); return b;
+  }
+  function panel() { const p = document.createElement('div'); p.className = 'rc-panel'; thread.appendChild(p); return p; }
+  function chip(p, label, onClick, opt) {
+    opt = opt || {};
+    const b = document.createElement('button'); b.type = 'button';
+    b.className = 'rc-chip' + (opt.primary ? ' primary' : '') + (opt.wide ? ' wide' : '');
+    b.innerHTML = (opt.dot ? '<i class="dot" style="background:' + opt.dot + '"></i>' : '') + '<span>' + esc(label) + '</span>' +
+      (opt.sub ? '<small>' + esc(opt.sub) + '</small>' : '');
+    if (opt.disabled) b.disabled = true;
+    b.addEventListener('click', onClick); p.appendChild(b); return b;
+  }
+  function scrollEnd() { requestAnimationFrame(() => { const last = thread.lastElementChild; if (last) last.scrollIntoView({ behavior: 'smooth', block: 'end' }); }); }
+
+  /* ---------- 질문 흐름 ---------- */
+  // step 번호까지의 문답을 다시 그리고, 해당 질문의 답 선택지를 보여준다
+  let cur = 0;
+  function goTo(step) {
+    cur = step;
+    $('result').style.display = 'none';
+    thread.innerHTML = '';
+    for (let i = 0; i < step; i++) { question(i, false); answered(i); }
+    question(step, true);
+  }
+  function next() { goTo(cur + 1); }
+
+  function question(i, live) {
+    const s = STEPS[i];
+    const text = {
+      start: '주장님, 새로운 로테이션을 짜드릴까요?',
+      vest: '팀 조끼 색상은 무엇입니까?',
+      n: '팀 인원은 몇 명입니까?',
+      games: '몇 경기를 뛰십니까?',
+      per: '경기당 인원수는 몇 명입니까?',
+      special: '지각자나 부상자가 있습니까?<br><span class="soft">(골키퍼 불가 인원 포함)</span>',
+      done: '로테이션을 구성했습니다.<br><span class="soft">마음에 드시면 확인, 다른 조합을 보려면 다시 계산을 눌러 주세요.</span>'
+    }[s];
+    if (!live) { bot(text); return; }
+    // 새 질문은 잠깐 '입력 중' 점을 보여준 뒤 나타남
+    const typing = bot('<span class="typing"><i></i><i></i><i></i></span>');
+    scrollEnd();
+    setTimeout(() => { typing.innerHTML = text; options(s); scrollEnd(); }, reduce ? 0 : 380);
+  }
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function answered(i) {
+    const s = STEPS[i];
+    if (s === 'start') me(A.loaded ? '직전 로테이션 불러오기' : '새로운 로테이션 구성', s);
+    else if (s === 'vest') me(A.vest + ' 조끼', s);
+    else if (s === 'n') me(A.n + '명', s);
+    else if (s === 'games') me(A.games + '경기', s);
+    else if (s === 'per') me(perText(), s);
+    else if (s === 'special') me(A.special ? '있음 · ' + consText() : '없음', s);
+  }
+  function perText() {
+    if (A.per === '6') return '전부 6:6';
+    if (A.per === '5') return '전부 5:5';
+    const c6 = A.types.filter(t => t === 6).length, c5 = A.types.length - c6;
+    return '개별 입력 (6:6 ' + c6 + '경기 · 5:5 ' + c5 + '경기)';
+  }
+  const modeName = m => (m === 'exclude' ? '경기 열외(지각)' : '골키퍼 제외(부상)');
+  function consText() {
+    return A.cons.map(c => (c.player + 1) + '번 ' + c.to + '경기까지 ' + modeName(c.mode)).join(', ');
+  }
+
+  function options(s) {
+    const p = panel();
+    if (s === 'start') {
+      chip(p, '새로운 로테이션 구성', () => { A = freshAnswers(); next(); }, { primary: true, wide: true });
+      const saved = loadSaved();
+      if (saved && saved.last) {
+        const d = new Date(saved.savedAt || Date.now());
+        const sub = (d.getMonth() + 1) + '/' + d.getDate() + ' · ' + (saved.a.vest || '') + ' · ' + saved.last.n + '명 · ' + saved.last.types.length + '경기';
+        chip(p, '직전 로테이션 불러오기', () => loadPrevious(saved), { wide: true, sub });
+      } else {
+        chip(p, '직전 로테이션 불러오기', () => {}, { wide: true, sub: '저장된 로테이션이 없습니다', disabled: true });
+      }
+    } else if (s === 'vest') {
+      VESTS.forEach(v => chip(p, v.k, () => { A.vest = v.k; next(); }, { dot: v.c }));
+    } else if (s === 'n') {
+      [5, 6, 7, 8, 9].forEach(n => chip(p, n + '명', () => setN(n)));
+      const other = chip(p, '기타', () => {
+        other.remove();
+        const box = document.createElement('div'); box.className = 'rc-other';
+        box.innerHTML = '<input type="number" id="rcOtherN" inputmode="numeric" min="2" max="30" placeholder="10" aria-label="팀원 수"><span>명</span>';
+        const ok = document.createElement('button'); ok.type = 'button'; ok.className = 'rc-chip primary'; ok.textContent = '확인';
+        ok.addEventListener('click', () => {
+          const v = parseInt($('rcOtherN').value, 10);
+          if (!v || v < 2 || v > 30) { hint(p, '2명부터 30명까지 입력해 주세요.'); return; }
+          setN(v);
+        });
+        box.appendChild(ok); p.appendChild(box); $('rcOtherN').focus();
+      });
+    } else if (s === 'games') {
+      p.classList.add('col');
+      const w = document.createElement('div'); w.className = 'rc-wheel'; w.tabIndex = 0; w.setAttribute('role', 'spinbutton');
+      w.setAttribute('aria-label', '경기 수'); w.setAttribute('aria-valuemin', '5'); w.setAttribute('aria-valuemax', '15');
+      let h = '<div class="sp"></div>'; for (let g = 5; g <= 15; g++) h += '<div class="it" data-v="' + g + '">' + g + '<small>경기</small></div>';
+      w.innerHTML = h + '<div class="sp"></div>';
+      const band = document.createElement('div'); band.className = 'rc-wheel-wrap'; band.appendChild(w); p.appendChild(band);
+      const items = w.querySelectorAll('.it'), H = () => items[0].offsetHeight || 56;
+      const val = () => Math.min(15, Math.max(5, 5 + Math.round(w.scrollTop / H())));
+      const mark = () => { const v = val(); items.forEach(it => it.classList.toggle('on', +it.dataset.v === v)); w.setAttribute('aria-valuenow', String(v)); };
+      requestAnimationFrame(() => { w.scrollTop = (A.games - 5) * H(); mark(); });
+      w.addEventListener('scroll', () => requestAnimationFrame(mark), { passive: true });
+      w.addEventListener('click', e => { const it = e.target.closest('.it'); if (it) w.scrollTo({ top: (+it.dataset.v - 5) * H(), behavior: 'smooth' }); });
+      w.addEventListener('keydown', e => {
+        const d = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0; if (!d) return;
+        e.preventDefault(); w.scrollTo({ top: (val() - 5 + d) * H(), behavior: 'smooth' });
+      });
+      chip(p, '확인', () => { A.games = val(); if (A.types.length !== A.games) A.types = []; next(); }, { primary: true, wide: true });
+    } else if (s === 'per') {
+      chip(p, '전부 6:6', () => { A.per = '6'; A.types = Array(A.games).fill(6); next(); }, { disabled: A.n < 6 });
+      chip(p, '전부 5:5', () => { A.per = '5'; A.types = Array(A.games).fill(5); next(); }, { disabled: A.n < 5 });
+      chip(p, '개별 입력', () => perEach(p), {});
+      if (A.n < 5) hint(p, '팀원이 ' + A.n + '명이라 개별 입력에서 경기마다 인원을 정해 주세요.');
+    } else if (s === 'special') {
+      chip(p, '있음', () => specialForm(p));
+      chip(p, '없음', () => { A.special = false; A.cons = []; compute(); });
+    } else if (s === 'done') {
+      chip(p, '확인', () => { save(); p.remove(); me('확인', 'done').disabled = true;
+        const b = bot('저장했습니다. 다음에 <b>직전 로테이션 불러오기</b>로 바로 볼 수 있습니다.');
+        const p2 = panel(); chip(p2, '새 로테이션 짜기', () => { A = freshAnswers(); goTo(0); }, { wide: true });
+        scrollEnd(); void b; }, { primary: true });
+      chip(p, '다시 계산', () => { A = freshAnswers(); goTo(0); window.scrollTo(0, 0); });   // 처음 질문부터 다시
+    }
+  }
+  function hint(p, t) { let h = p.querySelector('.rc-hint'); if (!h) { h = document.createElement('p'); h.className = 'rc-hint'; p.appendChild(h); } h.textContent = t; }
+  function setN(n) { A.n = n; A.cons = A.cons.filter(c => c.player < n); if (A.per === '6' && n < 6) A.per = ''; next(); }
+
+  // 개별 입력: 경기마다 6:6 / 5:5
+  function perEach(p) {
+    p.innerHTML = ''; p.classList.add('col');
+    if (A.types.length !== A.games) A.types = Array(A.games).fill(A.n >= 6 ? 6 : Math.min(5, A.n));
+    const grid = document.createElement('div'); grid.className = 'rc-games';
+    A.types.forEach((t, i) => {
+      const row = document.createElement('div'); row.className = 'rc-game';
+      row.innerHTML = '<span class="no">' + (i + 1) + '경기</span>';
+      const seg = document.createElement('div'); seg.className = 'rc-seg';
+      [6, 5].forEach(v => {
+        const b = document.createElement('button'); b.type = 'button'; b.textContent = v + ':' + v;
+        b.setAttribute('aria-pressed', String(t === v)); if (v > A.n) b.disabled = true;
+        b.addEventListener('click', () => { A.types[i] = v; seg.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b))); });
+        seg.appendChild(b);
+      });
+      row.appendChild(seg); grid.appendChild(row);
+    });
+    p.appendChild(grid);
+    chip(p, '확인', () => { A.per = 'each'; next(); }, { primary: true, wide: true });
+    scrollEnd();
+  }
+
+  // 특수 상황: [ ]번, [ ]경기까지, [열외 종류] 입력줄. '추가'를 누르면 입력줄이 하나 더 생기고,
+  // '로테이션 구성'을 누르면 화면의 입력줄이 모두 그대로 적용된다(1경기부터 해당 경기까지)
+  function specialForm(p) {
+    p.innerHTML = ''; p.classList.add('col');
+    const opt = (from, to, sel) => { let h = ''; for (let v = from; v <= to; v++) h += '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + v + '</option>'; return h; };
+    let rows = A.cons.length ? A.cons.map(c => ({ player: c.player, to: c.to, mode: c.mode })) : [{ player: 0, to: 1, mode: 'exclude' }];
+    const box = document.createElement('div'); box.className = 'rc-rows'; p.appendChild(box);
+    const paint = () => {
+      box.innerHTML = '';
+      rows.forEach((r, i) => {
+        const row = document.createElement('div'); row.className = 'rc-form';
+        row.innerHTML =
+          '<label><select data-k="player" aria-label="' + (i + 1) + '번째 선수 번호">' + opt(1, A.n, r.player + 1) + '</select><span>번,</span></label>' +
+          '<label><select data-k="to" aria-label="' + (i + 1) + '번째 몇 경기까지">' + opt(1, A.games, r.to) + '</select><span>경기까지</span></label>' +
+          '<div class="mode-seg" role="radiogroup" aria-label="' + (i + 1) + '번째 열외 종류">' +
+            '<button type="button" role="radio" data-m="exclude" aria-checked="' + (r.mode === 'exclude') + '">경기 열외 (지각)</button>' +
+            '<button type="button" role="radio" data-m="noKeeper" aria-checked="' + (r.mode === 'noKeeper') + '">골키퍼 제외 (부상)</button></div>';
+        row.querySelectorAll('.mode-seg button').forEach(btn => btn.addEventListener('click', () => {
+          r.mode = btn.dataset.m;
+          row.querySelectorAll('.mode-seg button').forEach(x => x.setAttribute('aria-checked', String(x === btn)));
+        }));
+        row.querySelectorAll('select').forEach(sel => sel.addEventListener('change', () => {
+          const k = sel.dataset.k; r[k] = k === 'player' ? +sel.value - 1 : +sel.value;
+        }));
+        if (rows.length > 1) {
+          const x = document.createElement('button'); x.type = 'button'; x.className = 'rc-row-x'; x.textContent = '삭제';
+          x.setAttribute('aria-label', (i + 1) + '번째 입력줄 삭제');
+          x.addEventListener('click', () => { rows.splice(i, 1); paint(); });
+          row.appendChild(x);
+        }
+        box.appendChild(row);
+      });
+      const tip = document.createElement('p'); tip.className = 'rc-hint';
+      tip.textContent = '지각자나 부상자가 더 있다면 추가를 누르세요';
+      box.appendChild(tip);
+    };
+    paint();
+    chip(p, '+ 지각자·부상자 추가', () => { rows.push({ player: 0, to: 1, mode: 'exclude' }); paint(); scrollEnd(); }, {});
+    chip(p, '로테이션 구성', () => {
+      A.cons = rows.map(r => ({ player: r.player, from: 1, to: r.to, mode: r.mode }));
+      A.special = A.cons.length > 0; compute();
+    }, { primary: true });
+    scrollEnd();
+  }
+
+  // 모은 답을 기존 계산기에 넣고 계산
+  function compute() {
+    $('teamName').value = A.vest;
+    $('numPlayers').value = A.n;
+    $('numGames').value = A.games;
+    renderGames();
+    const types = A.types.length === A.games ? A.types : Array(A.games).fill(A.per === '5' ? 5 : 6);
+    document.querySelectorAll('#gameList .seg').forEach((seg, i) => {
+      const btn = [...seg.children].find(b => b.textContent === types[i] + ':' + types[i]); if (btn) pick(btn, types[i]);
+    });
+    CONSTRAINTS = A.cons.map((c, i) => ({ id: i + 1, player: c.player, from: c.from, to: c.to, mode: c.mode }));
+    CID = CONSTRAINTS.length + 1;
+    renderConstraints();
+    goTo(STEPS.indexOf('done'));
+    setTimeout(() => { run(); save(); }, reduce ? 0 : 420);
+  }
+
+  function loadPrevious(saved) {
+    A = Object.assign(freshAnswers(), saved.a || {}, { loaded: true });
+    $('teamName').value = A.vest || '';
+    $('numPlayers').value = saved.last.n;
+    $('numGames').value = saved.last.types.length;
+    renderGames();
+    document.querySelectorAll('#gameList .seg').forEach((seg, i) => {
+      const t = saved.last.types[i]; const btn = [...seg.children].find(b => b.textContent === t + ':' + t); if (btn) pick(btn, t);
+    });
+    CONSTRAINTS = saved.cons || []; CID = CONSTRAINTS.reduce((m, c) => Math.max(m, c.id || 0), 0) + 1; renderConstraints();
+    LAST = saved.last;
+    thread.innerHTML = '';
+    bot('주장님, 새로운 로테이션을 짜드릴까요?');
+    me('직전 로테이션 불러오기', 'start');
+    const d = new Date(saved.savedAt || Date.now());
+    bot('직전 로테이션을 불러왔습니다.<br><span class="soft">' + (d.getMonth() + 1) + '/' + d.getDate() + ' · ' + esc(A.vest || '') + ' 조끼 · ' + LAST.n + '명 · ' + LAST.types.length + '경기</span>');
+    render(LAST.result, LAST.eval, LAST.n);   // 버튼 없이 바로 아래에 결과
+  }
+
+  let toastT = 0;
+  function toast(msg) { const t = $('tmToast'); if (!t) return; t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2200); }
+
+  // 결과 화면 '텍스트로 복사' 바로 아래: 새로운 로테이션 구성
+  const copyBtn = $('copyBtn');
+  if (copyBtn) {
+    const nb = document.createElement('button'); nb.type = 'button'; nb.className = 'btn-new'; nb.id = 'newRotBtn';
+    nb.textContent = '새로운 로테이션 구성';
+    nb.addEventListener('click', () => { A = freshAnswers(); goTo(1); });
+    copyBtn.insertAdjacentElement('afterend', nb);
+    const hint = $('copyHint'); if (hint) hint.textContent = '텍스트로 복사를 누르면 위 배치를 단톡방 등에 바로 붙여넣을 수 있습니다.';
+  }
+
+  goTo(0);
+  window.__rot = { A: () => A, goTo };
+  window.__rotSave = save;
+})();
+
+/* ===== 결과 화면: 한 경기 = 한 줄 (휴식 → 키퍼 → 필드, 칸 크기는 화면 폭에 맞춤) ===== */
+(function () {
+  'use strict';
+  const orig = window.render;
+  if (typeof orig !== 'function') return;
+  const sort = a => a.slice().sort((x, y) => x - y);
+  const pills = (arr, cls) => sort(arr).map(i => '<span class="pl ' + cls + '">' + (i + 1) + '</span>').join('');
+  let lastRes = null;
+  function fit() {
+    const box = document.getElementById('schedule'), gl = box && box.querySelector('.gl');
+    if (!gl || !lastRes) return;
+    const g = lastRes.games;
+    const mr = Math.max(1, ...g.map(x => x.resting.length + (x.excluded || []).length));
+    const mk = Math.max(1, ...g.map(x => x.gks.length));
+    const mf = Math.max(1, ...g.map(x => x.playing.length - x.gks.length));
+    // 필드 칸은 휴식·키퍼 칸의 0.82배 크기. 폭 = 경기번호 40 + 칸 사이 3곳 + 칸 안 간격 4px
+    const avail = gl.clientWidth - 8 - 40 - 3 * 8 - 4 * (mr - 1 + mk - 1 + mf - 1);
+    const pw = Math.max(22, Math.min(36, Math.floor(avail / (mr + mk + mf * 0.82))));
+    gl.style.setProperty('--pw', pw + 'px'); gl.style.setProperty('--fw', Math.floor(pw * 0.82) + 'px');
+    gl.style.setProperty('--rc', mr); gl.style.setProperty('--kc', mk);
+  }
+  window.addEventListener('resize', fit);
+  window.render = function (res, ev, n) {
+    orig(res, ev, n);
+    lastRes = res;
+    const games = res.games;
+    let h = '<div class="gl">' +
+      '<div class="gr head"><span>경기</span><span>휴식</span><span>키퍼</span><span>필드</span></div>';
+    games.forEach((g, i) => {
+      const field = g.playing.filter(p => !g.gks.includes(p));
+      const ex = g.excluded || [];
+      h += '<div class="gr" role="group" aria-label="' + (i + 1) + '경기 ' + g.playCount + '대' + g.playCount +
+        ', 휴식 ' + (sort(g.resting).map(x => x + 1).join('·') || '없음') + (ex.length ? ', 열외 ' + sort(ex).map(x => x + 1).join('·') : '') +
+        ', 키퍼 ' + sort(g.gks).map(x => x + 1).join('·') + '번, 필드 ' + sort(field).map(x => x + 1).join('·') + '">' +
+        '<div class="gno"><b>' + (i + 1) + '</b><small>' + g.playCount + ':' + g.playCount + '</small></div>' +
+        '<div class="rs">' + (g.resting.length || ex.length ? pills(g.resting, 'r') + pills(ex, 'x') : '<span class="none">—</span>') + '</div>' +
+        '<div class="gk">' + pills(g.gks, 'k') + '</div>' +
+        '<div class="fd">' + pills(field, 'f') + '</div>' +
+        '</div>';
+    });
+    h += '</div><p class="gl-note"><span class="pl r">7</span> 휴식 <span class="pl k">3</span> 키퍼 <span class="pl f">1</span> 필드' +
+      (games.some(g => (g.excluded || []).length) ? ' <span class="pl x">5</span> 열외(지각·부상)' : '') + '</p>';
+    document.getElementById('schedule').innerHTML = h;
+    fit();
+    buildMid(res, n);
+  };
+
+  // 경기 도중 부상자·조퇴자: 경기 전 질문과 같은 구성
+  //   현재 [ ]경기까지 완료 / 입력줄([ ]번 [ ]경기부터 + [열외 | 골키퍼 제외]) / + 추가 / 이후부터 다시 계산
+  // 계산이 끝날 때마다(새 로테이션·다시 계산 모두) 접힌 상태 + 빈칸으로 되돌린다
+  function buildMid(res, n) {
+    const sec = document.getElementById('midSection'); if (!sec) return;
+    sec.open = false;
+    const sum = sec.querySelector('summary'); if (sum) sum.innerHTML = '경기 도중 부상자나 조퇴자 발생 <span class="chev">▾</span>';
+    const body = sec.querySelector('.fold-body'); if (!body) return;
+    const G = res.games.length;
+    const opt = (from, to, sel) => { let h = '<option value=""' + (sel === '' ? ' selected' : '') + '></option>'; for (let v = from; v <= to; v++) h += '<option value="' + v + '"' + (v === sel ? ' selected' : '') + '>' + v + '</option>'; return h; };
+    const mids = CONSTRAINTS.filter(c => c.mid);
+    let done = '';
+    let rows = [{ player: '', from: '', mode: 'exclude' }];
+    body.innerHTML =
+      '<input type="hidden" id="lockedCount" value="0">' +
+      '<div class="mid">' +
+        '<div class="mid-line">현재 <select id="midDone" aria-label="완료된 경기 수">' + opt(0, G - 1, '') + '</select> 경기까지 완료</div>' +
+        '<div class="rc-rows" id="midRows"></div>' +
+        '<button type="button" class="mid-add" id="midAdd">+ 부상자·조퇴자 추가</button>' +
+        '<button type="button" class="btn-lg" id="midGo">이후부터 다시 계산</button>' +
+        '<p class="mid-err" id="midErr" role="alert"></p>' +
+        (mids.length ? '<div class="mid-list">' + mids.map(c => '<span>' + (c.player + 1) + '번 ' + c.from + '경기부터 ' + (c.mode === 'exclude' ? '열외' : '골키퍼 제외') + '</span>').join('') + '</div>' : '') +
+        '<p class="fold-lead">완료한 경기는 그대로 두고, 그 다음 경기부터 로테이션을 다시 짭니다.</p>' +
+      '</div>';
+    const $$ = id => document.getElementById(id);
+    const box = $$('midRows'), err = $$('midErr');
+    const minFrom = () => (done === '' ? 1 : done + 1);
+    function paint() {
+      box.innerHTML = '';
+      rows.forEach((r, i) => {
+        if (r.from !== '' && r.from < minFrom()) r.from = minFrom();
+        const row = document.createElement('div'); row.className = 'rc-form';
+        row.innerHTML =
+          '<label><select data-k="player" aria-label="' + (i + 1) + '번째 선수 번호">' + opt(1, n, r.player === '' ? '' : r.player + 1) + '</select><span>번</span></label>' +
+          '<label><select data-k="from" aria-label="' + (i + 1) + '번째 몇 경기부터">' + opt(minFrom(), G, r.from) + '</select><span>경기부터</span></label>' +
+          '<div class="mode-seg" role="radiogroup" aria-label="' + (i + 1) + '번째 종류">' +
+            '<button type="button" role="radio" data-m="exclude" aria-checked="' + (r.mode === 'exclude') + '">열외 (부상·조퇴 등)</button>' +
+            '<button type="button" role="radio" data-m="noKeeper" aria-checked="' + (r.mode === 'noKeeper') + '">골키퍼 제외</button></div>';
+        row.querySelectorAll('select').forEach(sel => sel.addEventListener('change', () => {
+          err.textContent = '';
+          const v = sel.value === '' ? '' : +sel.value;
+          if (sel.dataset.k === 'player') r.player = v === '' ? '' : v - 1; else { r.from = v; r.auto = false; }
+        }));
+        row.querySelectorAll('.mode-seg button').forEach(btn => btn.addEventListener('click', () => {
+          err.textContent = ''; r.mode = btn.dataset.m;
+          row.querySelectorAll('.mode-seg button').forEach(x => x.setAttribute('aria-checked', String(x === btn)));
+        }));
+        if (rows.length > 1) {
+          const x = document.createElement('button'); x.type = 'button'; x.className = 'rc-row-x'; x.textContent = '삭제';
+          x.setAttribute('aria-label', (i + 1) + '번째 입력줄 삭제');
+          x.addEventListener('click', () => { rows.splice(i, 1); paint(); });
+          row.appendChild(x);
+        }
+        box.appendChild(row);
+      });
+      const tip = document.createElement('p'); tip.className = 'rc-hint';
+      tip.textContent = '부상자나 조퇴자가 더 있다면 추가를 누르세요';
+      box.appendChild(tip);
+    }
+    paint();
+    // 완료 경기를 고르면 '경기부터' 칸이 자동으로 그 다음 경기로 채워짐(직접 고른 값은 더 늦을 때만 유지)
+    $$('midDone').addEventListener('change', e => {
+      err.textContent = ''; done = e.target.value === '' ? '' : +e.target.value;
+      rows.forEach(r => { if (done !== '' && (r.from === '' || r.auto || r.from < done + 1)) { r.from = done + 1; r.auto = true; } });
+      paint();
+    });
+    $$('midAdd').addEventListener('click', () => { rows.push({ player: '', from: done === '' ? '' : done + 1, auto: done !== '', mode: 'exclude' }); paint(); });
+    $$('midGo').addEventListener('click', () => {
+      if (done === '' || rows.some(r => r.player === '' || r.from === '' || r.mode === '')) { err.textContent = '빈칸을 모두 골라 주세요.'; return; }
+      rows.forEach(r => CONSTRAINTS.push({ id: CID++, player: r.player, from: Math.max(done + 1, r.from), to: G, mode: r.mode, mid: true }));
+      renderConstraints();
+      $$('lockedCount').value = done;
+      runContinue();
+      try { if (window.__rotSave) window.__rotSave(); } catch (e) {}
+    });
+  }
+})();
+
+/* ===== 텍스트로 복사: 단톡방용 간단한 형식 =====
+   파랑팀 풋살 로테이션 (총 9경기)
+   1경기 휴식 1,2 | GK 3,4
+   (번호별 누적은 넣지 않음. 열외자는 휴식에 포함, 휴식이 없으면 GK만, 경기 인원이 섞여 있으면 '(5:5)' 표시) */
+(function () {
+  'use strict';
+  window.buildShareText = function (n, games) {
+    const team = (document.getElementById('teamName').value || '').trim();
+    const nums = arr => arr.slice().sort((a, b) => a - b).map(x => x + 1).join(',');
+    // 처음 설정한 경기 인원이 섞여 있을 때만 (5:5) 표시 (열외로 인원이 줄어든 경우는 표시 안 함)
+    const types = (window.LAST && LAST.types) || games.map(g => g.playCount);
+    const mixed = new Set(types).size > 1;
+    const lines = [(team ? team + '팀 ' : '') + '풋살 로테이션 (총 ' + games.length + '경기)', ''];
+    games.forEach((g, i) => {
+      // 열외자도 휴식에 포함, 휴식이 없으면 GK만
+      const off = g.resting.concat(g.excluded || []);
+      lines.push((i + 1) + '경기' + (mixed ? ' (' + types[i] + ':' + types[i] + ')' : '') +
+        (off.length ? ' 휴식 ' + nums(off) + ' |' : '') + ' GK ' + (nums(g.gks) || '-'));
+    });
+    return lines.join('\n');
+  };
+})();
+</script>
+</body>
+</html>
