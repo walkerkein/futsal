@@ -513,6 +513,7 @@
   .tm-install-help { flex-basis: 100%; margin: 0; background: #1C1C1C; border-radius: 10px; padding: 10px 12px; font-size: 14px; line-height: 1.6; color: #D1D1D6; }
   .tm-install-help b { color: #fff; }
   .tm-notice { margin: 14px 0 0; font-size: 12.5px; line-height: 1.5; color: #8E8E93; text-align: center; }
+  .tm-add.wide { flex-basis: 100%; padding: 12px 18px; }   /* 카카오톡 안: 긴 문구라 한 줄 전체 */
   /* ===================== 로테이션: 타이머 계열 색 + 채팅 문답 ===================== */
   body.app.on-rotation { background: #000; }
   #view-rotation {
@@ -887,7 +888,7 @@
       </div>
     </div>
     <div class="tm-set-row" id="tmInstallRow" hidden>
-      <div class="tm-set-k"><b>홈 화면에 바로가기</b><span>아이콘을 누르면 브라우저로 바로 열림</span></div>
+      <div class="tm-set-k"><b>홈 화면에 바로가기 추가</b><span>아이콘을 누르면 브라우저로 바로 열림</span></div>
       <button class="tm-add" id="tmInstall" type="button" aria-expanded="false">방법 보기</button>
       <p class="tm-install-help" id="tmInstallHelp" hidden></p>
     </div>
@@ -1933,7 +1934,7 @@ renderConstraints();
   const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const inKakao = /KAKAOTALK/i.test(ua), isSamsung = /SamsungBrowser/i.test(ua), isCriOS = /CriOS/i.test(ua);
   row.hidden = false;
-  if (inKakao) btn.textContent = '브라우저로 열기';   // 카카오톡 안에서는 바로가기를 만들 수 없음
+  if (inKakao) { btn.textContent = '다른 브라우저에서 열고 진행하기'; btn.classList.add('wide'); }   // 카카오톡 안에서는 바로가기를 만들 수 없음
   function text() {
     if (isIOS) return isCriOS
       ? '주소창 오른쪽 <b>공유 버튼</b> → <b>홈 화면에 추가</b> → <b>추가</b>'

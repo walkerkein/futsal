@@ -248,3 +248,4 @@
   .tm-install-help { flex-basis: 100%; margin: 0; background: #1C1C1C; border-radius: 10px; padding: 10px 12px; font-size: 14px; line-height: 1.6; color: #D1D1D6; }
   .tm-install-help b { color: #fff; }
   .tm-notice { margin: 14px 0 0; font-size: 12.5px; line-height: 1.5; color: #8E8E93; text-align: center; }
+  .tm-add.wide { flex-basis: 100%; padding: 12px 18px; }   /* 카카오톡 안: 긴 문구라 한 줄 전체 */

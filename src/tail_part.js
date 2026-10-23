@@ -399,7 +399,7 @@
   const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const inKakao = /KAKAOTALK/i.test(ua), isSamsung = /SamsungBrowser/i.test(ua), isCriOS = /CriOS/i.test(ua);
   row.hidden = false;
-  if (inKakao) btn.textContent = '브라우저로 열기';   // 카카오톡 안에서는 바로가기를 만들 수 없음
+  if (inKakao) { btn.textContent = '다른 브라우저에서 열고 진행하기'; btn.classList.add('wide'); }   // 카카오톡 안에서는 바로가기를 만들 수 없음
   function text() {
     if (isIOS) return isCriOS
       ? '주소창 오른쪽 <b>공유 버튼</b> → <b>홈 화면에 추가</b> → <b>추가</b>'
