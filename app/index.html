@@ -509,6 +509,8 @@
   .upd span { flex: 1; }
   .upd-go { background: #000; color: #FEFF65; text-decoration: none; font-weight: 900; padding: 7px 16px; border-radius: 999px; }
   .upd-x { background: none; border: 0; color: #000; font-size: 18px; padding: 4px 6px; cursor: pointer; }
+  .upd span b { font-weight: 900; }
+  .upd-go { border: 0; cursor: pointer; font-family: inherit; font-size: 15px; }
   /* ===================== 로테이션: 타이머 계열 색 + 채팅 문답 ===================== */
   body.app.on-rotation { background: #000; }
   #view-rotation {
@@ -1910,6 +1912,36 @@ renderConstraints();
       show();
     })
     .catch(() => {});
+})();
+
+/* ---------- 홈 화면에 추가 안내(웹으로 열었을 때만) ----------
+   안드로이드 크롬: '추가' 버튼 한 번으로 설치 창. 아이폰: 공유 → 홈 화면에 추가 안내.
+   이미 홈 화면 아이콘으로 실행 중이거나, 안드로이드 앱(APK) 안이거나, 닫은 적이 있으면 띄우지 않음. */
+(function () {
+  const KEY = 'futsalInstall.skip';
+  const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  if (standalone || window.FutsalApp) return;
+  try { if (localStorage.getItem(KEY)) return; } catch (e) {}
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const inKakao = /KAKAOTALK/i.test(ua);
+  function show(text, action) {
+    if (document.querySelector('.upd')) return;
+    if (document.body.classList.contains('tm-running')) { setTimeout(() => show(text, action), 5000); return; }
+    const bar = document.createElement('div');
+    bar.className = 'upd'; bar.setAttribute('role', 'status');
+    bar.innerHTML = '<span>' + text + '</span>' + (action ? '<button class="upd-go" type="button">추가</button>' : '') + '<button class="upd-x" aria-label="닫기">✕</button>';
+    const close = () => { try { localStorage.setItem(KEY, '1'); } catch (e) {} bar.remove(); };
+    bar.querySelector('.upd-x').onclick = close;
+    if (action) bar.querySelector('.upd-go').onclick = () => { action().finally(() => bar.remove()); };
+    document.body.prepend(bar);
+  }
+  if (inKakao) return;   // 카카오톡 안에서는 추가가 안 되므로 랜딩 페이지 안내에 맡김
+  if (isIOS) { setTimeout(() => show('공유 버튼 → <b>홈 화면에 추가</b>로 앱처럼 쓸 수 있습니다'), 1500); return; }
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    show('홈 화면에 G풋살 아이콘 추가', () => { e.prompt(); return e.userChoice.then(r => { if (r && r.outcome === 'accepted') { try { localStorage.setItem(KEY, '1'); } catch (er) {} } }); });
+  });
 })();
 </script>
 <script>

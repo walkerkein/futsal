@@ -14,6 +14,10 @@
 - `android/` — 웹앱을 띄우는 안드로이드 앱(WebView, 작은 창 자동 전환, 진행 중 알림, 시스템 바 여백, `FutsalApp` JS 브리지: setRunning/enterPip/version).
 - `.github/workflows/android.yml` — `android/**` 변경이 main에 오면 APK 빌드 → 릴리스 `v1.<run_number>`에 `futsal-helper.apk` 게시. 서명은 저장소 비밀값 `KEYSTORE_B64`, `KEYSTORE_PASSWORD`(별칭 futsal). 열쇠 파일은 절대 커밋하지 않는다.
 
+## 배포 방식
+- 회원 배포는 **웹앱 + 홈 화면에 추가**가 기본(안드로이드·아이폰 공통). 랜딩에 APK 다운로드 버튼은 두지 않음 — 삼성 갤럭시(One UI 9) 피싱 앱 탐지가 스토어 밖 APK를 '잠재적으로 유해한 앱'으로 경고하기 때문.
+- 기존 APK 설치자는 그대로 사용 가능(웹을 불러옴). 유료 판매는 나중에 법인 명의 구글 플레이 등록 예정.
+
 ## 반영 방식
 - 화면·기능 수정(`src/`, `app/`, `index.html`): main에 올리면 1~2분 뒤 Pages 반영. 안드로이드 앱도 웹을 불러오므로 재설치 불필요.
 - 안드로이드 고유 기능 수정(`android/`): 새 APK 자동 빌드. 사용자는 다시 받아 덮어쓰기 설치.

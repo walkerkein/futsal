@@ -241,3 +241,5 @@
   .upd span { flex: 1; }
   .upd-go { background: #000; color: #FEFF65; text-decoration: none; font-weight: 900; padding: 7px 16px; border-radius: 999px; }
   .upd-x { background: none; border: 0; color: #000; font-size: 18px; padding: 4px 6px; cursor: pointer; }
+  .upd span b { font-weight: 900; }
+  .upd-go { border: 0; cursor: pointer; font-family: inherit; font-size: 15px; }
