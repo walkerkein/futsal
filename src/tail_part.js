@@ -388,32 +388,33 @@
     .catch(() => {});
 })();
 
-/* ---------- 홈 화면에 추가 안내(웹으로 열었을 때만) ----------
-   안드로이드 크롬: '추가' 버튼 한 번으로 설치 창. 아이폰: 공유 → 홈 화면에 추가 안내.
-   이미 홈 화면 아이콘으로 실행 중이거나, 안드로이드 앱(APK) 안이거나, 닫은 적이 있으면 띄우지 않음. */
+/* ---------- 설정 > 홈 화면에 추가 ----------
+   안드로이드(크롬·삼성 인터넷): 버튼 한 번으로 설치 창. 아이폰: 애플 정책상 버튼 설치가 불가능해 방법 안내.
+   카카오톡 안: 다른 브라우저로 열기. 이미 홈 화면 아이콘으로 실행 중이거나 안드로이드 앱(APK) 안이면 줄을 숨김. */
 (function () {
-  const KEY = 'futsalInstall.skip';
+  const row = document.getElementById('tmInstallRow'), btn = document.getElementById('tmInstall'), help = document.getElementById('tmInstallHelp');
+  if (!row) return;
   const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   if (standalone || window.FutsalApp) return;
-  try { if (localStorage.getItem(KEY)) return; } catch (e) {}
   const ua = navigator.userAgent || '';
   const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const inKakao = /KAKAOTALK/i.test(ua);
-  function show(text, action) {
-    if (document.querySelector('.upd')) return;
-    if (document.body.classList.contains('tm-running')) { setTimeout(() => show(text, action), 5000); return; }
-    const bar = document.createElement('div');
-    bar.className = 'upd'; bar.setAttribute('role', 'status');
-    bar.innerHTML = '<span>' + text + '</span>' + (action ? '<button class="upd-go" type="button">추가</button>' : '') + '<button class="upd-x" aria-label="닫기">✕</button>';
-    const close = () => { try { localStorage.setItem(KEY, '1'); } catch (e) {} bar.remove(); };
-    bar.querySelector('.upd-x').onclick = close;
-    if (action) bar.querySelector('.upd-go').onclick = () => { action().finally(() => bar.remove()); };
-    document.body.prepend(bar);
-  }
-  if (inKakao) return;   // 카카오톡 안에서는 추가가 안 되므로 랜딩 페이지 안내에 맡김
-  if (isIOS) { setTimeout(() => show('공유 버튼 → <b>홈 화면에 추가</b>로 앱처럼 쓸 수 있습니다'), 1500); return; }
-  window.addEventListener('beforeinstallprompt', e => {
-    e.preventDefault();
-    show('홈 화면에 G풋살 아이콘 추가', () => { e.prompt(); return e.userChoice.then(r => { if (r && r.outcome === 'accepted') { try { localStorage.setItem(KEY, '1'); } catch (er) {} } }); });
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; });
+  window.addEventListener('appinstalled', () => { deferred = null; row.hidden = true; });
+  row.hidden = false;
+  const say = html => { help.innerHTML = html; help.hidden = false; };
+  btn.addEventListener('click', () => {
+    if (inKakao) {
+      location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+      say('카카오톡 안에서는 추가가 되지 않아 다른 브라우저로 엽니다. 열린 화면에서 다시 <b>설정 → 추가</b>를 눌러 주세요.');
+    } else if (deferred) {
+      const e = deferred; deferred = null;
+      e.prompt(); e.userChoice.then(r => { if (r && r.outcome === 'accepted') { row.hidden = true; } else { deferred = e; } }).catch(() => {});
+    } else if (isIOS) {
+      say('아이폰은 버튼으로 바로 추가할 수 없습니다.<br><b>공유 버튼</b>(사파리는 화면 아래, 크롬은 주소창 오른쪽) → <b>홈 화면에 추가</b> → <b>추가</b>');
+    } else {
+      say('브라우저 메뉴에서 추가해 주세요.<br><b>크롬:</b> 오른쪽 위 ⋮ → <b>홈 화면에 추가</b><br><b>삼성 인터넷:</b> 아래 ≡ → <b>현재 페이지 추가 → 홈 화면</b>');
+    }
   });
 })();
