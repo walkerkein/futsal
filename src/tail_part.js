@@ -388,33 +388,29 @@
     .catch(() => {});
 })();
 
-/* ---------- 설정 > 홈 화면에 추가 ----------
-   안드로이드(크롬·삼성 인터넷): 버튼 한 번으로 설치 창. 아이폰: 애플 정책상 버튼 설치가 불가능해 방법 안내.
-   카카오톡 안: 다른 브라우저로 열기. 이미 홈 화면 아이콘으로 실행 중이거나 안드로이드 앱(APK) 안이면 줄을 숨김. */
+/* ---------- 설정 > 홈 화면에 바로가기 ----------
+   앱 설치가 아니라 '브라우저로 여는 바로가기'를 만든다(manifest display: browser).
+   웹페이지가 버튼으로 바로가기를 직접 만들 수는 없어서(브라우저 정책), 폰에 맞는 추가 방법을 펼쳐 보여 준다.
+   카카오톡 안이면 먼저 다른 브라우저로 연다. 안드로이드 앱(APK) 안에서는 줄을 숨김. */
 (function () {
   const row = document.getElementById('tmInstallRow'), btn = document.getElementById('tmInstall'), help = document.getElementById('tmInstallHelp');
-  if (!row) return;
-  const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
-  if (standalone || window.FutsalApp) return;
+  if (!row || window.FutsalApp) return;
   const ua = navigator.userAgent || '';
   const isIOS = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const inKakao = /KAKAOTALK/i.test(ua);
-  let deferred = null;
-  window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; });
-  window.addEventListener('appinstalled', () => { deferred = null; row.hidden = true; });
+  const inKakao = /KAKAOTALK/i.test(ua), isSamsung = /SamsungBrowser/i.test(ua), isCriOS = /CriOS/i.test(ua);
   row.hidden = false;
-  const say = html => { help.innerHTML = html; help.hidden = false; };
+  if (inKakao) btn.textContent = '브라우저로 열기';   // 카카오톡 안에서는 바로가기를 만들 수 없음
+  function text() {
+    if (isIOS) return isCriOS
+      ? '주소창 오른쪽 <b>공유 버튼</b> → <b>홈 화면에 추가</b> → <b>추가</b>'
+      : '화면 아래 <b>공유 버튼</b>(네모에서 위로 화살표) → <b>홈 화면에 추가</b> → <b>추가</b>';
+    if (isSamsung) return '화면 아래 <b>≡</b> → <b>현재 페이지 추가</b> → <b>홈 화면</b>';
+    return '오른쪽 위 <b>⋮</b> → <b>홈 화면에 추가</b> → <b>바로가기 만들기</b>(또는 <b>추가</b>)';
+  }
   btn.addEventListener('click', () => {
-    if (inKakao) {
-      location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
-      say('카카오톡 안에서는 추가가 되지 않아 다른 브라우저로 엽니다. 열린 화면에서 다시 <b>설정 → 추가</b>를 눌러 주세요.');
-    } else if (deferred) {
-      const e = deferred; deferred = null;
-      e.prompt(); e.userChoice.then(r => { if (r && r.outcome === 'accepted') { row.hidden = true; } else { deferred = e; } }).catch(() => {});
-    } else if (isIOS) {
-      say('아이폰은 버튼으로 바로 추가할 수 없습니다.<br><b>공유 버튼</b>(사파리는 화면 아래, 크롬은 주소창 오른쪽) → <b>홈 화면에 추가</b> → <b>추가</b>');
-    } else {
-      say('브라우저 메뉴에서 추가해 주세요.<br><b>크롬:</b> 오른쪽 위 ⋮ → <b>홈 화면에 추가</b><br><b>삼성 인터넷:</b> 아래 ≡ → <b>현재 페이지 추가 → 홈 화면</b>');
-    }
+    if (inKakao) { location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href); return; }
+    const open = help.hidden;
+    if (open) help.innerHTML = text();
+    help.hidden = !open; btn.setAttribute('aria-expanded', String(open)); btn.textContent = open ? '닫기' : '방법 보기';
   });
 })();

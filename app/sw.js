@@ -1,5 +1,5 @@
 // 오프라인 실행용 캐시. 파일을 고치면 VERSION 숫자를 올리면 됩니다.
-const VERSION = 'futsal-v3';
+const VERSION = 'futsal-v4';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
