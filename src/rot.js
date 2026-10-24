@@ -286,8 +286,24 @@
     nb.textContent = '새로운 로테이션 구성';
     nb.addEventListener('click', () => { A = freshAnswers(); goTo(1); });
     copyBtn.insertAdjacentElement('afterend', nb);
-    const hint = $('copyHint'); if (hint) hint.textContent = '텍스트로 복사를 누르면 위 배치를 단톡방 등에 바로 붙여넣을 수 있습니다.';
+    // '텍스트로 복사' → '카카오톡으로 공유': 휴대폰 공유 창을 띄워 카카오톡(단톡방)에 결과 전체를 바로 보냄.
+    // 공유 창이 없는 환경(카카오톡 안 브라우저·PC 등)에서는 복사 후 붙여 넣기 안내.
+    copyBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3C6.48 3 2 6.51 2 10.84c0 2.8 1.87 5.26 4.69 6.65l-.96 3.5c-.08.3.26.54.52.37l4.14-2.74c.53.06 1.06.1 1.61.1 5.52 0 10-3.51 10-7.88S17.52 3 12 3z"/></svg>카카오톡으로 공유';
+    copyBtn.classList.add('btn-kakao');
+    const hint = $('copyHint'); if (hint) hint.textContent = '공유 창에서 카카오톡을 고르면 위 배치가 그대로 단톡방에 올라갑니다.';
   }
+  window.copyResultText = function () {
+    if (typeof LAST === 'undefined' || !LAST) return;
+    const text = window.buildShareText(LAST.n, LAST.result.games, LAST.result.rest, LAST.result.gk);
+    const copy = () => {
+      const ok = () => toast('복사했습니다. 카카오톡 대화창에 붙여 넣어 주세요.');
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok).catch(() => fallbackCopy(text, ok));
+      else fallbackCopy(text, ok);
+    };
+    if (navigator.share && !/KAKAOTALK/i.test(navigator.userAgent || '')) {
+      navigator.share({ text }).catch(e => { if (!e || e.name !== 'AbortError') copy(); });   // 사용자가 닫은 경우는 그대로
+    } else copy();
+  };
 
   goTo(0);
   window.__rot = { A: () => A, goTo };

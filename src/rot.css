@@ -298,3 +298,7 @@
   /* 결과 범례: 빈 색 칸 + 이름 */
   .gl-note { gap: 6px 14px; }
   .gl-note .lg { display: inline-flex; align-items: center; gap: 6px; }
+  /* 결과: 카카오톡으로 공유 버튼(카카오 노랑 + 말풍선) */
+  #view-rotation .btn-kakao { display: flex; align-items: center; justify-content: center; gap: 8px; background: #FEE500; color: #191919; border-color: #FEE500; }
+  #view-rotation .btn-kakao svg { width: 22px; height: 22px; }
+  .tm-toast { word-break: keep-all; width: max-content; max-width: min(340px, 90vw); text-align: center; }
