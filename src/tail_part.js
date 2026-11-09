@@ -10,6 +10,15 @@
   // (예전엔 오디오 재생 위치로 시간을 그려서, 알림·메모리 부족 등으로 오디오가 잠깐 멈추면 화면 시간도 멈췄음)
   let t0 = 0, held = 0, runLen = 0, watch = 0;
   const now = () => performance.now();
+  // 진단 기록: 오디오·화면·절전 관련 사건을 시각과 함께 남긴다(설정 하단 '진단 기록 복사'). 멈춤 원인 확인용.
+  const DIAG = [];
+  function log(what) {
+    const t = new Date(), hh = String(t.getHours()).padStart(2, '0') + ':' + String(t.getMinutes()).padStart(2, '0') + ':' + String(t.getSeconds()).padStart(2, '0');
+    let a = '-'; try { a = audio.currentTime.toFixed(1); } catch (e) {}
+    DIAG.push(hh + ' 시계 ' + (state === 'idle' ? '-' : clock().toFixed(1)) + ' 오디오 ' + a + (audio.paused ? '(멈춤)' : '') + ' | ' + what);
+    if (DIAG.length > 300) DIAG.shift();
+    try { localStorage.setItem('futsalDiag', DIAG.slice(-120).join('\n')); } catch (e) {}
+  }
   function clock() {
     if (state === 'running') return Math.max(0, (now() - t0) / 1000);
     if (state === 'done') return runLen;
@@ -25,13 +34,13 @@
     audio.currentTime = 0;
     const p = audio.play();
     if (p && p.catch) p.catch(() => { toast('소리를 켜지 못했습니다. 다시 눌러 주세요.'); stop(); });
-    t0 = now(); held = 0; synced = false;
+    t0 = now(); held = 0; synced = false; log('시작 ' + mmss(run.t));
     state = 'running'; afterChange();
   }
-  function pause() { held = clock(); state = 'paused'; audio.pause(); afterChange(); }
-  function resume() { t0 = now() - held * 1000; state = 'running'; try { audio.currentTime = held; } catch (e) {} audio.play().catch(() => {}); afterChange(); }
-  function stop() { audio.pause(); setUrl(null); state = 'idle'; run = null; held = 0; if (typeof closePip === 'function') closePip(); afterChange(); }
-  function finish() { if (state !== 'running') return; audio.pause(); state = 'done'; afterChange(); setTimeout(() => closePip(), 4000); }
+  function pause() { log('일시정지(사용자)'); held = clock(); state = 'paused'; audio.pause(); afterChange(); }
+  function resume() { log('계속(사용자)'); t0 = now() - held * 1000; state = 'running'; try { audio.currentTime = held; } catch (e) {} audio.play().catch(() => {}); afterChange(); }
+  function stop() { if (state !== 'idle') log('정지'); audio.pause(); setUrl(null); state = 'idle'; run = null; held = 0; if (typeof closePip === 'function') closePip(); afterChange(); }
+  function finish() { if (state !== 'running') return; log('경기 종료'); audio.pause(); state = 'done'; afterChange(); setTimeout(() => closePip(), 4000); }
 
   // 1초마다 오디오가 시계를 잘 따라가는지 확인: 멈췄으면 다시 재생, 0.35초 이상 어긋나면 위치를 맞춤.
   // 일시정지는 화면 버튼·잠금화면 컨트롤로만 하고, 휴대폰이 오디오를 멈춰도 경기 시계는 계속 흐른다.
@@ -40,10 +49,17 @@
     const want = clock();
     if (want >= runLen) { finish(); return; }
     try {
-      if (audio.paused && !audio.ended) { audio.currentTime = want; audio.play().catch(() => {}); }
-      else if (!audio.seeking && Math.abs(audio.currentTime - want) > 0.35) audio.currentTime = want;
+      if (audio.paused && !audio.ended) { log('점검: 오디오가 멈춰 있어 ' + want.toFixed(1) + '초로 다시 재생'); audio.currentTime = want; audio.play().catch(e => log('재생 실패 ' + (e && e.name))); }
+      else if (!audio.seeking && Math.abs(audio.currentTime - want) > 0.35) { log('점검: 오디오 ' + audio.currentTime.toFixed(1) + ' → 시계 ' + want.toFixed(1) + '로 맞춤'); audio.currentTime = want; }
     } catch (e) {}
   }
+  ['pause', 'play', 'playing', 'waiting', 'stalled', 'suspend', 'ended', 'error', 'emptied', 'abort'].forEach(ev => audio.addEventListener(ev, () => log('오디오 ' + ev + (ev === 'error' && audio.error ? ' code ' + audio.error.code : ''))));
+  document.addEventListener('visibilitychange', () => log('화면 ' + (document.visibilityState === 'visible' ? '보임' : '숨김')));
+  window.addEventListener('pagehide', () => log('페이지 숨김(pagehide)'));
+  window.addEventListener('pageshow', () => log('페이지 복귀(pageshow)'));
+  document.addEventListener('freeze', () => log('브라우저가 페이지를 얼림(freeze)'));
+  document.addEventListener('resume', () => log('페이지 재개(resume)'));
+  window.addEventListener('error', e => log('오류 ' + (e.message || '')));
   audio.addEventListener('ended', () => { if (clock() >= runLen - 1) finish(); else guard(); });
   let synced = false;   // 오디오가 실제로 소리를 내기 시작한 순간에 시계 기준점을 맞춤
   audio.addEventListener('playing', () => { if (state === 'running' && !synced) { synced = true; t0 = now() - audio.currentTime * 1000; } });
@@ -221,7 +237,7 @@
 
   /* ---------- 화면 꺼짐 방지 · 잠금화면 컨트롤 ---------- */
   async function keepAwake() {
-    try { if ('wakeLock' in navigator && !wake && document.visibilityState === 'visible') { wake = await navigator.wakeLock.request('screen'); wake.addEventListener('release', () => { wake = null; }); } } catch (e) {}
+    try { if ('wakeLock' in navigator && !wake && document.visibilityState === 'visible') { wake = await navigator.wakeLock.request('screen'); log('화면 켜둠 잠금 획득'); wake.addEventListener('release', () => { wake = null; log('화면 켜둠 잠금 해제됨'); }); } else if (!('wakeLock' in navigator)) log('이 브라우저는 화면 켜둠 잠금 미지원'); } catch (e) { log('화면 켜둠 잠금 실패 ' + (e && e.name)); }
   }
   function releaseAwake() { try { if (wake) wake.release(); } catch (e) {} wake = null; }
   document.addEventListener('visibilitychange', () => {
@@ -379,6 +395,15 @@
   }
 
   // 검증용 훅
+  const diagBtn = $('tmDiag');
+  if (diagBtn) diagBtn.addEventListener('click', () => {
+    let saved = ''; try { saved = localStorage.getItem('futsalDiag') || ''; } catch (e) {}
+    const text = 'G풋살 진단 기록 · ' + navigator.userAgent + '\n' + (DIAG.length ? DIAG.join('\n') : saved);
+    const ok = () => toast('진단 기록을 복사했습니다. 카톡 등에 붙여 넣어 보내 주세요.');
+    if (navigator.share) navigator.share({ text }).catch(() => { if (navigator.clipboard) navigator.clipboard.writeText(text).then(ok); });
+    else if (navigator.clipboard) navigator.clipboard.writeText(text).then(ok).catch(() => prompt('진단 기록', text));
+    else prompt('진단 기록', text);
+  });
   window.__tm = { timeline: () => timeline({ t: cfg.t, a: ALARM, r: HALVES, cd: cfg.cd, sv: cfg.sv }), cfg, PRE, audio,
     clock: () => clock(), state: () => state, jump: sec => { t0 -= sec * 1000; },
     pipShot: () => { if (!pipCanvas) { pipCanvas = document.createElement('canvas'); pipCanvas.width = 480; pipCanvas.height = 300; pipCtx = pipCanvas.getContext('2d'); } last = ''; draw(); drawPip(); return pipCanvas.toDataURL(); } };
