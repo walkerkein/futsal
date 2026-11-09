@@ -63,6 +63,9 @@
   audio.addEventListener('ended', () => { if (clock() >= runLen - 1) finish(); else guard(); });
   let synced = false;   // 오디오가 실제로 소리를 내기 시작한 순간에 시계 기준점을 맞춤
   audio.addEventListener('playing', () => { if (state === 'running' && !synced) { synced = true; t0 = now() - audio.currentTime * 1000; } });
+  // 백그라운드에서는 브라우저가 1초 점검을 늦출 수 있으므로, 휴대폰이 오디오를 멈춘 순간 바로 복구를 시도한다
+  audio.addEventListener('pause', () => { if (state === 'running' && !audio.ended) { setTimeout(guard, 300); setTimeout(guard, 2000); } });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') guard(); });
   audio.addEventListener('waiting', guard);
   audio.addEventListener('stalled', guard);
 
