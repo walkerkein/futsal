@@ -1545,35 +1545,60 @@ renderConstraints();
   let state = 'idle';           // idle | running | paused | done
   let run = null;               // 시작할 때의 설정 사본
   let url = null, raf = 0, wake = null;
+  // 경기 시계: 휴대폰 시계(performance.now) 기준으로 흐른다. 오디오는 이 시계를 따라가게 맞춘다.
+  // (예전엔 오디오 재생 위치로 시간을 그려서, 알림·메모리 부족 등으로 오디오가 잠깐 멈추면 화면 시간도 멈췄음)
+  let t0 = 0, held = 0, runLen = 0, watch = 0;
+  const now = () => performance.now();
+  function clock() {
+    if (state === 'running') return Math.max(0, (now() - t0) / 1000);
+    if (state === 'done') return runLen;
+    return held;
+  }
 
   function setUrl(u) { if (url) URL.revokeObjectURL(url); url = u; audio.src = u || ''; }
 
   function start() {
     run = { t: cfg.t, a: ALARM < cfg.t ? ALARM : 0, r: HALVES, cd: cfg.cd, sv: cfg.sv };
-    setUrl(renderWav(timeline(run)));
+    const tl = timeline(run); runLen = tl.total;
+    setUrl(renderWav(tl));
     audio.currentTime = 0;
     const p = audio.play();
     if (p && p.catch) p.catch(() => { toast('소리를 켜지 못했습니다. 다시 눌러 주세요.'); stop(); });
+    t0 = now(); held = 0; synced = false;
     state = 'running'; afterChange();
   }
-  function pause() { audio.pause(); state = 'paused'; afterChange(); }
-  function resume() { audio.play(); state = 'running'; afterChange(); }
-  function stop() { audio.pause(); setUrl(null); state = 'idle'; run = null; if (typeof closePip === 'function') closePip(); afterChange(); }
+  function pause() { held = clock(); state = 'paused'; audio.pause(); afterChange(); }
+  function resume() { t0 = now() - held * 1000; state = 'running'; try { audio.currentTime = held; } catch (e) {} audio.play().catch(() => {}); afterChange(); }
+  function stop() { audio.pause(); setUrl(null); state = 'idle'; run = null; held = 0; if (typeof closePip === 'function') closePip(); afterChange(); }
+  function finish() { if (state !== 'running') return; audio.pause(); state = 'done'; afterChange(); setTimeout(() => closePip(), 4000); }
 
-  audio.addEventListener('ended', () => { if (state === 'running') { state = 'done'; afterChange(); setTimeout(() => closePip(), 4000); } });
-  audio.addEventListener('pause', () => { if (state === 'running' && !audio.ended) { state = 'paused'; afterChange(); } });
-  audio.addEventListener('play', () => { if (state === 'paused') { state = 'running'; afterChange(); } });
-  audio.addEventListener('seeked', () => { last = ''; draw(); });   // 잠금화면에서 위치를 옮겨도 화면 갱신
+  // 1초마다 오디오가 시계를 잘 따라가는지 확인: 멈췄으면 다시 재생, 0.35초 이상 어긋나면 위치를 맞춤.
+  // 일시정지는 화면 버튼·잠금화면 컨트롤로만 하고, 휴대폰이 오디오를 멈춰도 경기 시계는 계속 흐른다.
+  function guard() {
+    if (state !== 'running') return;
+    const want = clock();
+    if (want >= runLen) { finish(); return; }
+    try {
+      if (audio.paused && !audio.ended) { audio.currentTime = want; audio.play().catch(() => {}); }
+      else if (!audio.seeking && Math.abs(audio.currentTime - want) > 0.35) audio.currentTime = want;
+    } catch (e) {}
+  }
+  audio.addEventListener('ended', () => { if (clock() >= runLen - 1) finish(); else guard(); });
+  let synced = false;   // 오디오가 실제로 소리를 내기 시작한 순간에 시계 기준점을 맞춤
+  audio.addEventListener('playing', () => { if (state === 'running' && !synced) { synced = true; t0 = now() - audio.currentTime * 1000; } });
+  audio.addEventListener('waiting', guard);
+  audio.addEventListener('stalled', guard);
 
   function afterChange() {
     cancelAnimationFrame(raf);
+    clearInterval(watch); watch = state === 'running' ? setInterval(guard, 1000) : 0;
     document.body.classList.toggle('tm-running', state !== 'idle');
     if (state === 'running') loop(); else draw();
     if (state === 'running') keepAwake(); else releaseAwake();
     media();
     requestAnimationFrame(() => { last = ''; fitKey = ''; draw(); });
   }
-  function loop() { draw(); raf = requestAnimationFrame(loop); }
+  function loop() { raf = requestAnimationFrame(loop); try { draw(); } catch (e) {} if (state === 'running' && clock() >= runLen) finish(); }   // 그리기 오류가 나도 시계는 계속
 
   /* ---------- 화면 그리기 ---------- */
   const el = {
@@ -1592,7 +1617,7 @@ renderConstraints();
     let halfK = '전반 남은 시간', halfLeft = c.t, totalLeft = G;
 
     if (state !== 'idle') {
-      const t = audio.currentTime || 0, end = halfStart(c, c.r - 1) + c.t;
+      const t = clock(), end = halfStart(c, c.r - 1) + c.t;
       if (t < PRE && state !== 'done') {
         phase = 'ready'; label = '준비'; time = String(Math.max(1, Math.min(3, Math.ceil(PRE - t))));
       } else if (t < end && state !== 'done') {
@@ -1807,7 +1832,7 @@ renderConstraints();
     try { if (document.pictureInPictureElement) document.exitPictureInPicture(); } catch (e) {}
     try { if (pipVideo && pipVideo.webkitPresentationMode === 'picture-in-picture') pipVideo.webkitSetPresentationMode('inline'); } catch (e) {}
   }
-  audio.addEventListener('timeupdate', () => { if (pipTick) { last = ''; draw(); } });   // 백그라운드에서도 오디오 진행에 맞춰 갱신
+  audio.addEventListener('timeupdate', () => { if (pipTick || document.visibilityState !== 'visible') { last = ''; draw(); } });   // 백그라운드에서도 오디오 진행에 맞춰 갱신
   $('tmPip').addEventListener('click', openPip);
 
   /* ---------- 버튼 ---------- */
@@ -1894,6 +1919,7 @@ renderConstraints();
 
   // 검증용 훅
   window.__tm = { timeline: () => timeline({ t: cfg.t, a: ALARM, r: HALVES, cd: cfg.cd, sv: cfg.sv }), cfg, PRE, audio,
+    clock: () => clock(), state: () => state, jump: sec => { t0 -= sec * 1000; },
     pipShot: () => { if (!pipCanvas) { pipCanvas = document.createElement('canvas'); pipCanvas.width = 480; pipCanvas.height = 300; pipCtx = pipCanvas.getContext('2d'); } last = ''; draw(); drawPip(); return pipCanvas.toDataURL(); } };
 })();
 
